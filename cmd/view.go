@@ -59,7 +59,7 @@ func init() {
 
 func cmdView(cmd *cobra.Command, args []string) {
 	app, _ := application.Create(application.Options{
-		Title:  "Hello G3N",
+		Title:  "oq",
 		Width:  800,
 		Height: 600,
 	})

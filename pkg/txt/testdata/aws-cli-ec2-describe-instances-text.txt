@@ -1,0 +1,73 @@
+RESERVATIONS	984042669697		r-0e45feafdbe3510d9
+INSTANCES	0	x86_64		False	True	xen	ami-bed0adc6	i-0df1130cf2e868669	t2.nano	teleport	2018-11-03T03:10:33.000Z	ip-172-31-2-156.us-west-2.compute.internal	172.31.2.156	ec2-34-219-149-253.us-west-2.compute.amazonaws.com	34.219.149.253	/dev/sda1	ebs	True		subnet-09da173c735fd5373	hvm   	vpc-010120b532b115fa0
+BLOCKDEVICEMAPPINGS	/dev/sda1
+EBS	2018-11-03T03:10:34.000Z	False	attached	vol-08f1f6af6d612f99e
+CPUOPTIONS	1	1
+MONITORING	disabled
+NETWORKINTERFACES	Primary network interface	02:17:0b:42:2a:46	eni-0ad935e5f003ce7e4	984042669697	ip-172-31-2-156.us-west-2.compute.internal	172.31.2.156	True	in-use	subnet-09da173c735fd5373	vpc-010120b532b115fa0
+ASSOCIATION	amazon	ec2-34-219-149-253.us-west-2.compute.amazonaws.com	34.219.149.253
+ATTACHMENT	2018-11-03T03:10:33.000Z	eni-attach-033f9892d5977f19e	True	0	attached
+GROUPS	sg-07879ec9de552826c	us-west-2-aws-auth
+PRIVATEIPADDRESSES	True	ip-172-31-2-156.us-west-2.compute.internal	172.31.2.156
+ASSOCIATION	amazon	ec2-34-219-149-253.us-west-2.compute.amazonaws.com	34.219.149.253
+PLACEMENT	us-west-2a		default
+PRODUCTCODES	6x5jmcajty9edm3f211pqjfn2	marketplace
+SECURITYGROUPS	sg-07879ec9de552826c	us-west-2-aws-auth
+STATE	16	running
+TAGS	Name	auth
+TAGS	TeleportRole	bastion
+TAGS	TeleportCluster	us-west-2-aws
+RESERVATIONS	984042669697		r-083e1fef6eea16a33
+INSTANCES	0	x86_64		False	True	xen	ami-bed0adc6	i-084c1a7663ee11cbe	t2.nano	teleport	2018-11-03T03:11:48.000Z	ip-172-31-2-139.us-west-2.compute.internal	172.31.2.139	ec2-34-216-97-120.us-west-2.compute.amazonaws.com	34.216.97.120	/dev/sda1	ebs	True		subnet-09da173c735fd5373	hvm   	vpc-010120b532b115fa0
+BLOCKDEVICEMAPPINGS	/dev/sda1
+EBS	2018-11-03T03:11:49.000Z	False	attached	vol-0c15d7276886905ac
+CPUOPTIONS	1	1
+MONITORING	disabled
+NETWORKINTERFACES	Primary network interface	02:18:ac:d5:48:de	eni-08ec673afa5148bc7	984042669697	ip-172-31-2-139.us-west-2.compute.internal	172.31.2.139	True	in-use	subnet-09da173c735fd5373	vpc-010120b532b115fa0
+ASSOCIATION	amazon	ec2-34-216-97-120.us-west-2.compute.amazonaws.com	34.216.97.120
+ATTACHMENT	2018-11-03T03:11:48.000Z	eni-attach-0e16b35caa790c388	True	0	attached
+GROUPS	sg-09d2ac695237c4cde	us-west-2-aws-proxy
+PRIVATEIPADDRESSES	True	ip-172-31-2-139.us-west-2.compute.internal	172.31.2.139
+ASSOCIATION	amazon	ec2-34-216-97-120.us-west-2.compute.amazonaws.com	34.216.97.120
+PLACEMENT	us-west-2a		default
+PRODUCTCODES	6x5jmcajty9edm3f211pqjfn2	marketplace
+SECURITYGROUPS	sg-09d2ac695237c4cde	us-west-2-aws-proxy
+STATE	16	running
+STATEREASON
+TAGS	Name	proxy
+TAGS	TeleportCluster	us-west-2-aws
+TAGS	TeleportRole	proxy
+RESERVATIONS	984042669697	903220451833	r-0c51a2fd93065a51b
+INSTANCES	0	x86_64	90659b5e-625a-305f-5083-2fa3fdceaf0b_subnet-0892302b292d95a90_1	False	True	xen	ami-bed0adc6	i-0b42d69f86eb6ec99	t2.nano	teleport	2018-11-03T03:23:14.000Z	ip-172-31-6-212.us-west-2.compute.internal	172.31.6.212		/dev/sda1	ebs	True		subnet-0892302b292d95a90	hvm	vpc-010120b532b115fa0
+BLOCKDEVICEMAPPINGS	/dev/sda1
+EBS	2018-11-03T03:23:15.000Z	False	attached	vol-03a33b500ab4d5a54
+CPUOPTIONS	1	1
+MONITORING	disabled
+NETWORKINTERFACES		02:4f:99:0a:14:d8	eni-0b8f7dc6e22be8923	984042669697	ip-172-31-6-212.us-west-2.compute.internal	172.31.6.212	True	in-use	subnet-0892302b292d95a90	vpc-010120b532b115fa0
+ATTACHMENT	2018-11-03T03:23:14.000Z	eni-attach-0bbdb0d63babcdc2b	True	0	attached
+GROUPS	sg-05e2fd29e6b5dbecc	us-west-2-aws-node
+PRIVATEIPADDRESSES	True	ip-172-31-6-212.us-west-2.compute.internal	172.31.6.212
+PLACEMENT	us-west-2a		default
+PRODUCTCODES	6x5jmcajty9edm3f211pqjfn2	marketplace
+SECURITYGROUPS	sg-05e2fd29e6b5dbecc	us-west-2-aws-node
+STATE	16	running
+TAGS	Name	node
+TAGS	aws:ec2launchtemplate:id	lt-0dc4fab0fb3c9ee35
+TAGS	aws:autoscaling:groupName	teleport-node
+TAGS	aws:ec2launchtemplate:version	1
+RESERVATIONS	984042669697		r-0fa7ce6f3d8ac45e5
+INSTANCES	0	x86_64		False	True	xen	ami-061e7ebbc234015fe	i-06ef2a2032c906f62	t2.nano	teleport	2018-11-01T19:53:20.000Z	ip-172-31-2-191.us-west-2.compute.internal	172.31.2.191	ec2-34-212-22-111.us-west-2.compute.amazonaws.com	34.212.22.111	/dev/xvda	ebs	True		subnet-09da173c735fd5373      	hvm	vpc-010120b532b115fa0
+BLOCKDEVICEMAPPINGS	/dev/xvda
+EBS	2018-11-01T19:53:21.000Z	True	attached	vol-0189f09211d4a4473
+CPUOPTIONS	1	1
+MONITORING	disabled
+NETWORKINTERFACES	Primary network interface	02:c8:72:8e:2c:04	eni-0566d9ce1916621e0	984042669697	ip-172-31-2-191.us-west-2.compute.internal	172.31.2.191	True	in-use	subnet-09da173c735fd5373	vpc-010120b532b115fa0
+ASSOCIATION	amazon	ec2-34-212-22-111.us-west-2.compute.amazonaws.com	34.212.22.111
+ATTACHMENT	2018-11-01T19:53:20.000Z	eni-attach-00d6ec0827b3db774	True	0	attached
+GROUPS	sg-006e277c01587264b	launch-wizard-1
+PRIVATEIPADDRESSES	True	ip-172-31-2-191.us-west-2.compute.internal	172.31.2.191
+ASSOCIATION	amazon	ec2-34-212-22-111.us-west-2.compute.amazonaws.com	34.212.22.111
+PLACEMENT	us-west-2a		default
+SECURITYGROUPS	sg-006e277c01587264b	launch-wizard-1
+STATE	16	running
+TAGS	Name	dev
