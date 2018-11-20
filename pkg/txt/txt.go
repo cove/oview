@@ -28,7 +28,7 @@ USER               PID  %CPU %MEM      VSZ    RSS   TT  STAT STARTED      TIME C
 cove             19666  19.3  0.3  4609988  49760   ??  S     1:18PM   0:01.34 _windowserver
 */
 
-func NewTable(fd io.Reader) (error, map[string][]string) {
+func NewTable(fd io.Reader) (map[string][]string, error) {
 
 	tmpTable := make([][]string, 500)
 
@@ -61,7 +61,7 @@ func NewTable(fd io.Reader) (error, map[string][]string) {
 		newTable[tmpTable[y][key]] = tmpTable[y]
 	}
 
-	return nil, newTable
+	return newTable, nil
 }
 
 func findFirstUniqueValuedColumn(table [][]string) int {

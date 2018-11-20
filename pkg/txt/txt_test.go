@@ -40,10 +40,10 @@ func TestNewTable(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, table := NewTable(tt.args.fd)
+			table, err := NewTable(tt.args.fd)
 			fmt.Println(table)
-			if got != tt.want {
-				t.Errorf("isTableHeader() = %v, want %v", got, tt.want)
+			if err != tt.want {
+				t.Errorf("isTableHeader() = %v, want %v", err, tt.want)
 			}
 		})
 	}

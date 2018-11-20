@@ -15,10 +15,11 @@
 package cmd
 
 import (
-	"bytes"
-	"fmt"
 	"os/exec"
+	"strconv"
 	"time"
+
+	"github.com/cove/oq/pkg/txt"
 
 	"github.com/g3n/engine/geometry"
 	"github.com/g3n/engine/graphic"
@@ -112,41 +113,31 @@ func cmdView(cmd *cobra.Command, args []string) {
 				.003)
 		})
 
-	app.Subscribe(application.OnAfterRender,
-		func(evname string, ev interface{}) {
-			j := 0
-			for i := range keys {
-				phongs[0][j].SetColor(&math32.Color{0, float32(table[keys[i]]), 0})
-				j++
-				j++
-			}
-		})
-
 	app.TimerManager.Initialize()
 	app.SetInterval(time.Duration(5*time.Second), nil, func(i interface{}) {
-		ReadInTable()
+		table := ReadInTable()
+		green, _ := strconv.ParseFloat(table["15225"][2], 32)
+		phongs[0][0].SetColor(&math32.Color{0, float32(green), 0})
 	})
 
 	app.Run()
 }
 
-var table = make(map[string]int, 10)
-var keys = make([]string, 2)
-
-func ReadInTable() {
+func ReadInTable() map[string][]string {
 
 	cmd := exec.Command("/bin/ps", "aux")
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
+	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		panic(err)
 	}
 
-	table["init"] = 1
-	keys[0] = "init"
-	table["run"] = 100
-	keys[1] = "run"
+	if err := cmd.Start(); err != nil {
+		panic(err)
+	}
+	table, _ := txt.NewTable(stdout)
 
-	fmt.Printf("in all caps: %q\n", out.String())
+	if err := cmd.Wait(); err != nil {
+		panic(err)
+	}
+	return table
 }
