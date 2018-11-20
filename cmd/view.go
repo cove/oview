@@ -19,13 +19,12 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/g3n/engine/math32"
+
+	"github.com/cove/oq/pkg/cubeplane"
+
 	"github.com/cove/oq/pkg/txt"
 
-	"github.com/g3n/engine/geometry"
-	"github.com/g3n/engine/graphic"
-	"github.com/g3n/engine/light"
-	"github.com/g3n/engine/material"
-	"github.com/g3n/engine/math32"
 	"github.com/g3n/engine/util/application"
 
 	"github.com/spf13/cobra"
@@ -65,60 +64,17 @@ func cmdView(cmd *cobra.Command, args []string) {
 		Height: 600,
 	})
 
-	phongs := [100][100]*material.Phong{}
-	for x := -10; x < 10; x++ {
-		cube := geometry.NewCube(1.0)
-		mat := material.NewPhong(math32.NewColor("DarkBlue"))
-		cube1Mesh := graphic.NewMesh(cube, mat)
-		cube1Mesh.SetPosition(float32(x), 0, 0.0)
-		app.Scene().Add(cube1Mesh)
-
-		phongs[x+10][0] = mat
-
-		//cube2 := geometry.NewCube(.5)
-		//mat2 := material.NewPhong(math32.NewColor("DarkRed"))
-		//cube2Mesh := graphic.NewMesh(cube2, mat2)
-		//cube2Mesh.SetPosition(float32(x), 0, 1.0)
-		//app.Scene().Add(cube2Mesh)
-
-		for y := -10; y < 10; y++ {
-			cube := geometry.NewCube(1.0)
-			mat := material.NewPhong(math32.NewColor("DarkBlue"))
-			cube1Mesh := graphic.NewMesh(cube, mat)
-			cube1Mesh.SetPosition(float32(x), float32(y), 0.0)
-			app.Scene().Add(cube1Mesh)
-			phongs[x+10][y+10] = mat
-			y++
-		}
-		x++
-	}
-
-	// Add lights to the scene
-	ambientLight := light.NewAmbient(&math32.Color{1.0, 1.0, 1.0}, 0.8)
-	app.Scene().Add(ambientLight)
-	pointLight := light.NewPoint(&math32.Color{1, 1, 1}, 15.0)
-	pointLight.SetPosition(1, 0, 2)
-	app.Scene().Add(pointLight)
-
-	// Add an axis helper to the scene
-	//axis := graphic.NewAxisHelper(1.5)
-	//app.Scene().Add(axis)
-
-	app.CameraPersp().SetPosition(0, -15, 10)
-	app.CameraPersp().LookAt(&math32.Vector3{0, 0, 0})
-
-	app.Subscribe(application.OnAfterRender,
-		func(evname string, ev interface{}) {
-			app.Scene().RotateOnAxis(&math32.Vector3{0, 0, 1},
-				.003)
+	cp := cubeplane.Init(app)
+	app.SetInterval(time.Duration(5*time.Second), nil,
+		func(i interface{}) {
+			table := ReadInTable()
+			for j := range table {
+				cp.Add(j, table[j])
+				red, _ := strconv.ParseFloat(cp.Cubeattrs[j][2], 63)
+				green, _ := strconv.ParseFloat(cp.Cubeattrs[j][2], 64)
+				cp.Cubemat[j].SetColor(&math32.Color{float32(red), float32(green), 0})
+			}
 		})
-
-	app.TimerManager.Initialize()
-	app.SetInterval(time.Duration(5*time.Second), nil, func(i interface{}) {
-		table := ReadInTable()
-		green, _ := strconv.ParseFloat(table["15225"][2], 32)
-		phongs[0][0].SetColor(&math32.Color{0, float32(green), 0})
-	})
 
 	app.Run()
 }
