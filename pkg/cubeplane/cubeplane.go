@@ -26,16 +26,12 @@ import (
 )
 
 type CubePlane struct {
-	app       *application.Application
-	Cubemat   map[string]*material.Phong
+	app          *application.Application
+	Cubemat      map[string]*material.Phong
+	CubematIndex []*material.Phong
+
 	Cubemesh  map[string]*graphic.Mesh
 	Cubeattrs map[string][]string
-
-	xpos  float32
-	ypos  float32
-	theta float32
-
-	size float32
 }
 
 func Init(app *application.Application) *CubePlane {
@@ -53,10 +49,7 @@ func Init(app *application.Application) *CubePlane {
 
 	app.CameraPersp().SetPosition(0, -15, 10)
 	app.CameraPersp().LookAt(&math32.Vector3{0, 0, 0})
-
 	app.TimerManager.Initialize()
-
-	size := float32(20.0)
 
 	app.Subscribe(application.OnAfterRender,
 		func(evname string, ev interface{}) {
@@ -64,13 +57,16 @@ func Init(app *application.Application) *CubePlane {
 				.003)
 		})
 
-	return &CubePlane{
+	c := &CubePlane{
 		app:       app,
 		Cubemat:   make(map[string]*material.Phong),
 		Cubemesh:  make(map[string]*graphic.Mesh),
 		Cubeattrs: make(map[string][]string),
-		size:      size,
 	}
+
+	c.initCubes(10)
+
+	return c
 }
 
 func (c *CubePlane) Add(id string, attrs []string) {
@@ -81,45 +77,34 @@ func (c *CubePlane) Add(id string, attrs []string) {
 	c.Cubemesh[id] = mesh
 	c.Cubeattrs[id] = attrs
 
-	pos := c.getNextGridPosition()
-	mesh.SetPositionVec(pos)
+	//pos := c.getNextGridPosition()
+	//mesh.SetPositionVec(pos)
 
 	c.app.Scene().Add(mesh)
 }
 
 func (c *CubePlane) Update(id string, attrs []string) {
 	if mat, ok := c.Cubemat[id]; ok {
-
 		cpu, _ := strconv.ParseFloat(attrs[2], 64)
 		redpercent := float32(cpu / 255)
-
 		mat.SetColor(&math32.Color{redpercent, 0, 0})
 	}
 }
 
-func (c *CubePlane) getNextArchimedeanSprialPosition() *math32.Vector3 {
+func (c *CubePlane) initCubes(size float32) {
+	for x := -size; x < size; x++ {
+		cube := geometry.NewCube(1.0)
+		mat := material.NewPhong(math32.NewColor("DarkBlue"))
+		mesh := graphic.NewMesh(cube, mat)
+		mesh.SetPosition(float32(x), 0, 0.0)
+		c.app.Scene().Add(mesh)
 
-	a := float32(1.0)
-	b := float32(1.0)
-
-	r := a + b*c.theta
-	x := r * math32.Cos(c.theta)
-	y := r * math32.Sin(c.theta)
-	c.theta += .7
-
-	return &math32.Vector3{x, y, 0}
-}
-
-func (c *CubePlane) getNextGridPosition() *math32.Vector3 {
-
-	if c.xpos < c.size {
-		c.xpos++
-	} else if c.ypos < c.size {
-		c.xpos = 0
-		c.ypos++
-	} else {
-		panic("out of space for new cubes")
+		for y := -size; y < size; y++ {
+			cube := geometry.NewCube(1.0)
+			mat := material.NewPhong(math32.NewColor("DarkBlue"))
+			mesh := graphic.NewMesh(cube, mat)
+			mesh.SetPosition(float32(x), float32(y), 0.0)
+			c.app.Scene().Add(mesh)
+		}
 	}
-
-	return &math32.Vector3{c.xpos, c.ypos, 0}
 }
