@@ -66,7 +66,7 @@ func cmdView(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	cp := cubeplane.Init(app)
+	cp := cubeplane.Init(app, strings.Join(args, " "))
 
 	table := ReadInTable(args[0], strings.Join(args[1:], " "))
 	for j := range table {

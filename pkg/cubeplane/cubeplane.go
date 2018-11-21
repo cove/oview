@@ -44,11 +44,13 @@ type CubePlane struct {
 	assignedX              float32
 	assignedY              float32
 
+	command string
+
 	selectedX float32
 	selectedY float32
 }
 
-func Init(app *application.Application) *CubePlane {
+func Init(app *application.Application, cmd string) *CubePlane {
 
 	// Add lights to the scene
 	ambientLight := light.NewAmbient(&math32.Color{1.0, 1.0, 1.0}, 0.8)
@@ -64,18 +66,26 @@ func Init(app *application.Application) *CubePlane {
 	app.CameraPersp().SetPosition(0, -15, 10)
 	app.CameraPersp().LookAt(&math32.Vector3{0, 0, 0})
 
+	// init stuff for hud
 	gs, err := gls.New()
 	if err != nil {
 		panic(err)
 	}
-
 	gui.NewRoot(gs, app.Window())
 	root := gui.NewRoot(gs, app.Window())
-	root.SetColor(math32.NewColor("Pink"))
-	l1 := gui.NewLabel("Simple GUI button demo")
-	l1.SetPosition(10, 10)
+
+	l1 := gui.NewLabel("oq command: " + cmd)
+	width, _ := app.Window().Size()
+	l1.SetPosition(float32(width)-130, 10)
 	l1.SetPaddings(2, 2, 2, 2)
+	l1.SetFontSize(12.0)
 	root.Add(l1)
+
+	// why doesn't this resize adjust the text location?
+	root.Subscribe(window.OnWindowSize, func(evname string, ev interface{}) {
+		width, _ := app.Window().Size()
+		l1.SetPosition(float32(width)-130, 10)
+	})
 
 	// Creates a renderer and adds default shaders
 	rend := renderer.NewRenderer(gs)
@@ -83,7 +93,7 @@ func Init(app *application.Application) *CubePlane {
 	if err != nil {
 		panic(err)
 	}
-	rend.SetGui(root)
+	app.SetGui(root)
 
 	// Sets window background color
 	gs.ClearColor(0.0394, 0.1601, 0.1983, 1.0)
@@ -100,6 +110,7 @@ func Init(app *application.Application) *CubePlane {
 		assignedX:              -size,
 		assignedY:              -size,
 		materialsByXY:          make(map[float32]map[float32]*material.Phong),
+		command:                cmd,
 	}
 
 	app.Subscribe(application.OnAfterRender,
