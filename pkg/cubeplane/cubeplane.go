@@ -18,6 +18,12 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/g3n/engine/renderer"
+
+	"github.com/g3n/engine/gls"
+
+	"github.com/g3n/engine/gui"
+
 	"github.com/g3n/engine/window"
 
 	"github.com/g3n/engine/geometry"
@@ -29,13 +35,14 @@ import (
 )
 
 type CubePlane struct {
-	app            *application.Application
-	materialsById  map[string]*material.Phong
-	attributesById map[string][]string
-	materialsByXY  map[float32]map[float32]*material.Phong
-	size           float32
-	assignedX      float32
-	assignedY      float32
+	app                    *application.Application
+	materialsByID          map[string]*material.Phong
+	attributesIDByMaterial map[*material.Phong]string
+	attributesByID         map[string][]string
+	materialsByXY          map[float32]map[float32]*material.Phong
+	size                   float32
+	assignedX              float32
+	assignedY              float32
 
 	selectedX float32
 	selectedY float32
@@ -56,17 +63,43 @@ func Init(app *application.Application) *CubePlane {
 
 	app.CameraPersp().SetPosition(0, -15, 10)
 	app.CameraPersp().LookAt(&math32.Vector3{0, 0, 0})
+
+	gs, err := gls.New()
+	if err != nil {
+		panic(err)
+	}
+
+	gui.NewRoot(gs, app.Window())
+	root := gui.NewRoot(gs, app.Window())
+	root.SetColor(math32.NewColor("Pink"))
+	l1 := gui.NewLabel("Simple GUI button demo")
+	l1.SetPosition(10, 10)
+	l1.SetPaddings(2, 2, 2, 2)
+	root.Add(l1)
+
+	// Creates a renderer and adds default shaders
+	rend := renderer.NewRenderer(gs)
+	err = rend.AddDefaultShaders()
+	if err != nil {
+		panic(err)
+	}
+	rend.SetGui(root)
+
+	// Sets window background color
+	gs.ClearColor(0.6, 0.6, 0.6, 1.0)
+
 	app.TimerManager.Initialize()
 	size := float32(10.0)
 
 	c := &CubePlane{
-		app:            app,
-		materialsById:  make(map[string]*material.Phong),
-		attributesById: make(map[string][]string),
-		size:           size,
-		assignedX:      -size,
-		assignedY:      -size,
-		materialsByXY:  make(map[float32]map[float32]*material.Phong),
+		app:                    app,
+		materialsByID:          make(map[string]*material.Phong),
+		attributesIDByMaterial: make(map[*material.Phong]string),
+		attributesByID:         make(map[string][]string),
+		size:                   size,
+		assignedX:              -size,
+		assignedY:              -size,
+		materialsByXY:          make(map[float32]map[float32]*material.Phong),
 	}
 
 	app.Subscribe(application.OnAfterRender,
@@ -75,7 +108,9 @@ func Init(app *application.Application) *CubePlane {
 		})
 
 	app.Window().SubscribeID(window.OnKeyDown, 1, func(ev string, i interface{}) {
-		c.materialsByXY[c.selectedX][c.selectedY].SetEmissiveColor(&math32.Color{0, 0, 0})
+		mat := c.materialsByXY[c.selectedX][c.selectedY]
+		mat.SetEmissiveColor(&math32.Color{0, 0, 0})
+
 		key := i.(*window.KeyEvent)
 		switch key.Keycode {
 		case window.KeyUp:
@@ -99,6 +134,7 @@ func Init(app *application.Application) *CubePlane {
 			break
 		}
 
+		// wrap cursor on plane
 		if c.selectedX > 0 && c.selectedX > c.size {
 			c.selectedX = -c.size
 		} else if c.selectedX < 0 && c.selectedX < -c.size {
@@ -109,8 +145,10 @@ func Init(app *application.Application) *CubePlane {
 			c.selectedY = c.size
 		}
 
-		c.materialsByXY[c.selectedX][c.selectedY].SetEmissiveColor(&math32.Color{0, 1, 1})
-		fmt.Printf("interface i = %v", i)
+		mat = c.materialsByXY[c.selectedX][c.selectedY]
+		mat.SetEmissiveColor(&math32.Color{0, 100, 0})
+		id := c.attributesIDByMaterial[mat]
+		fmt.Printf("Selected: %v\n", c.attributesByID[id])
 	})
 
 	c.initCubePlane(size)
@@ -119,8 +157,10 @@ func Init(app *application.Application) *CubePlane {
 }
 
 func (c *CubePlane) Add(id string, attrs []string) {
-	c.materialsById[id] = c.materialsByXY[c.assignedX][c.assignedY]
-	c.attributesById[id] = attrs
+	mat := c.materialsByXY[c.assignedX][c.assignedY]
+	c.materialsByID[id] = mat
+	c.attributesByID[id] = attrs
+	c.attributesIDByMaterial[mat] = id
 	if c.assignedX < c.size {
 		c.assignedX++
 	} else if c.assignedX >= c.size {
@@ -133,7 +173,7 @@ func (c *CubePlane) Add(id string, attrs []string) {
 }
 
 func (c *CubePlane) Update(id string, attrs []string) {
-	if mat, ok := c.materialsById[id]; ok && mat != nil {
+	if mat, ok := c.materialsByID[id]; ok && mat != nil {
 		cpu, _ := strconv.ParseFloat(attrs[2], 64)
 		mat.SetColor(&math32.Color{float32(cpu), 0, 0})
 	}
