@@ -15,7 +15,10 @@
 package cubeplane
 
 import (
+	"fmt"
 	"strconv"
+
+	"github.com/g3n/engine/window"
 
 	"github.com/g3n/engine/geometry"
 	"github.com/g3n/engine/graphic"
@@ -29,8 +32,13 @@ type CubePlane struct {
 	app            *application.Application
 	materialsById  map[string]*material.Phong
 	attributesById map[string][]string
-	materials      []*material.Phong
-	assigned       int
+	materialsByXY  map[float32]map[float32]*material.Phong
+	size           float32
+	assignedX      float32
+	assignedY      float32
+
+	selectedX float32
+	selectedY float32
 }
 
 func Init(app *application.Application) *CubePlane {
@@ -49,32 +57,56 @@ func Init(app *application.Application) *CubePlane {
 	app.CameraPersp().SetPosition(0, -15, 10)
 	app.CameraPersp().LookAt(&math32.Vector3{0, 0, 0})
 	app.TimerManager.Initialize()
-
-	app.Subscribe(application.OnAfterRender,
-		func(evname string, ev interface{}) {
-			app.Scene().RotateOnAxis(&math32.Vector3{0, 0, 1},
-				.003)
-		})
+	size := float32(10.0)
 
 	c := &CubePlane{
 		app:            app,
 		materialsById:  make(map[string]*material.Phong),
 		attributesById: make(map[string][]string),
+		size:           size,
+		assignedX:      -size,
+		assignedY:      -size,
+		materialsByXY:  make(map[float32]map[float32]*material.Phong),
 	}
 
-	c.initCubePlane(10)
+	app.Subscribe(application.OnAfterRender,
+		func(evname string, ev interface{}) {
+			app.Scene().RotateOnAxis(&math32.Vector3{0, 0, 1}, .003)
+		})
+
+	app.Window().SubscribeID(window.OnKeyDown, 1, func(ev string, i interface{}) {
+		key := i.(*window.KeyEvent)
+		switch key.Keycode {
+		case window.KeyUp:
+		case window.KeyW:
+			c.selectedY++
+			c.materialsByXY[c.selectedX][c.selectedY].SetEmissiveColor(&math32.Color{0, 255, 255})
+			return
+		}
+		fmt.Printf("interface i = %v", i)
+	})
+
+	c.initCubePlane(size)
 
 	return c
 }
 
 func (c *CubePlane) Add(id string, attrs []string) {
-	c.materialsById[id] = c.materials[c.assigned]
+	c.materialsById[id] = c.materialsByXY[c.assignedX][c.assignedY]
 	c.attributesById[id] = attrs
-	c.assigned--
+	if c.assignedX < c.size {
+		c.assignedX++
+	} else if c.assignedX >= c.size {
+		c.assignedX = -c.size
+		c.assignedY++
+	}
+	if c.assignedY > c.size {
+		panic("out of grid space")
+	}
 }
 
 func (c *CubePlane) Update(id string, attrs []string) {
-	if mat, ok := c.materialsById[id]; ok {
+	if mat, ok := c.materialsById[id]; ok && mat != nil {
 		cpu, _ := strconv.ParseFloat(attrs[2], 64)
 		mat.SetColor(&math32.Color{float32(cpu), 0, 0})
 	}
@@ -82,23 +114,17 @@ func (c *CubePlane) Update(id string, attrs []string) {
 
 func (c *CubePlane) initCubePlane(size float32) {
 	for x := -size; x < size; x++ {
-		cube := geometry.NewCube(.5)
-		mat := material.NewPhong(math32.NewColor("DarkBlue"))
-		mesh := graphic.NewMesh(cube, mat)
-		mesh.SetPosition(float32(x), 0, 0.0)
-		c.app.Scene().Add(mesh)
-		c.materials = append(c.materials, mat)
-		c.assigned++
-
 		for y := -size; y < size; y++ {
 			cube := geometry.NewCube(.5)
 			mat := material.NewPhong(math32.NewColor("DarkBlue"))
 			mesh := graphic.NewMesh(cube, mat)
 			mesh.SetPosition(float32(x), float32(y), 0.0)
 			c.app.Scene().Add(mesh)
-			c.materials = append(c.materials, mat)
-			c.assigned++
+
+			if _, ok := c.materialsByXY[x]; !ok {
+				c.materialsByXY[x] = make(map[float32]*material.Phong)
+			}
+			c.materialsByXY[x][y] = mat
 		}
 	}
-	c.assigned--
 }
