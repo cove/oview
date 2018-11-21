@@ -16,10 +16,7 @@ package cmd
 
 import (
 	"os/exec"
-	"strconv"
 	"time"
-
-	"github.com/g3n/engine/math32"
 
 	"github.com/cove/oq/pkg/cubeplane"
 
@@ -65,14 +62,16 @@ func cmdView(cmd *cobra.Command, args []string) {
 	})
 
 	cp := cubeplane.Init(app)
+
+	table := ReadInTable()
+	for j := range table {
+		cp.Add(j, table[j])
+	}
 	app.SetInterval(time.Duration(5*time.Second), nil,
 		func(i interface{}) {
 			table := ReadInTable()
 			for j := range table {
-				cp.Add(j, table[j])
-				red, _ := strconv.ParseFloat(cp.Cubeattrs[j][2], 63)
-				green, _ := strconv.ParseFloat(cp.Cubeattrs[j][2], 64)
-				cp.Cubemat[j].SetColor(&math32.Color{float32(red), float32(green), 0})
+				cp.Update(j, table[j])
 			}
 		})
 

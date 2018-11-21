@@ -15,6 +15,8 @@
 package cubeplane
 
 import (
+	"strconv"
+
 	"github.com/g3n/engine/geometry"
 	"github.com/g3n/engine/graphic"
 	"github.com/g3n/engine/light"
@@ -32,6 +34,8 @@ type CubePlane struct {
 	xpos  float32
 	ypos  float32
 	theta float32
+
+	size float32
 }
 
 func Init(app *application.Application) *CubePlane {
@@ -52,6 +56,8 @@ func Init(app *application.Application) *CubePlane {
 
 	app.TimerManager.Initialize()
 
+	size := float32(20.0)
+
 	app.Subscribe(application.OnAfterRender,
 		func(evname string, ev interface{}) {
 			app.Scene().RotateOnAxis(&math32.Vector3{0, 0, 1},
@@ -63,6 +69,7 @@ func Init(app *application.Application) *CubePlane {
 		Cubemat:   make(map[string]*material.Phong),
 		Cubemesh:  make(map[string]*graphic.Mesh),
 		Cubeattrs: make(map[string][]string),
+		size:      size,
 	}
 }
 
@@ -74,10 +81,20 @@ func (c *CubePlane) Add(id string, attrs []string) {
 	c.Cubemesh[id] = mesh
 	c.Cubeattrs[id] = attrs
 
-	pos := c.getNextSprialPosition()
+	pos := c.getNextGridPosition()
 	mesh.SetPositionVec(pos)
 
 	c.app.Scene().Add(mesh)
+}
+
+func (c *CubePlane) Update(id string, attrs []string) {
+	if mat, ok := c.Cubemat[id]; ok {
+
+		cpu, _ := strconv.ParseFloat(attrs[2], 64)
+		redpercent := float32(cpu / 255)
+
+		mat.SetColor(&math32.Color{redpercent, 0, 0})
+	}
 }
 
 func (c *CubePlane) getNextArchimedeanSprialPosition() *math32.Vector3 {
@@ -90,17 +107,19 @@ func (c *CubePlane) getNextArchimedeanSprialPosition() *math32.Vector3 {
 	y := r * math32.Sin(c.theta)
 	c.theta += .7
 
-	return &math32.Vector3{x, y, 10}
+	return &math32.Vector3{x, y, 0}
 }
-func (c *CubePlane) getNextSprialPosition() *math32.Vector3 {
 
-	a := float32(1.0)
-	b := float32(1.0)
+func (c *CubePlane) getNextGridPosition() *math32.Vector3 {
 
-	r := a + b*c.theta
-	x := r * math32.Cos(c.theta)
-	y := r * math32.Sin(c.theta)
-	c.theta += .7
+	if c.xpos < c.size {
+		c.xpos++
+	} else if c.ypos < c.size {
+		c.xpos = 0
+		c.ypos++
+	} else {
+		panic("out of space for new cubes")
+	}
 
-	return &math32.Vector3{x, y, 10}
+	return &math32.Vector3{c.xpos, c.ypos, 0}
 }
