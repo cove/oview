@@ -86,7 +86,7 @@ func Init(app *application.Application) *CubePlane {
 	rend.SetGui(root)
 
 	// Sets window background color
-	gs.ClearColor(0.6, 0.6, 0.6, 1.0)
+	gs.ClearColor(0.0394, 0.1601, 0.1983, 1.0)
 
 	app.TimerManager.Initialize()
 	size := float32(10.0)
@@ -175,7 +175,7 @@ func (c *CubePlane) Add(id string, attrs []string) {
 func (c *CubePlane) Update(id string, attrs []string) {
 	if mat, ok := c.materialsByID[id]; ok && mat != nil {
 		cpu, _ := strconv.ParseFloat(attrs[2], 64)
-		mat.SetColor(&math32.Color{float32(cpu), 0, 0})
+		mat.SetEmissiveColor(&math32.Color{float32(cpu), 0, 0})
 	}
 }
 
@@ -183,7 +183,7 @@ func (c *CubePlane) initCubePlane(size float32) {
 	for x := -size; x <= size; x++ {
 		for y := -size; y <= size; y++ {
 			cube := geometry.NewCube(.5)
-			mat := material.NewPhong(math32.NewColor("Black"))
+			mat := material.NewPhong(math32.NewColorHex(0x002b36))
 			mesh := graphic.NewMesh(cube, mat)
 			mesh.SetPosition(float32(x), float32(y), 0.0)
 			c.app.Scene().Add(mesh)

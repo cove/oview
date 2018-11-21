@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -48,8 +49,6 @@ func init() {
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// viewCmd.PersistentFlags().String("foo", "", "A help for foo")
-
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// viewCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
@@ -61,6 +60,11 @@ func cmdView(cmd *cobra.Command, args []string) {
 		Width:  800,
 		Height: 600,
 	})
+
+	if len(args) < 1 {
+		cmd.Usage()
+		os.Exit(1)
+	}
 
 	cp := cubeplane.Init(app)
 
@@ -81,7 +85,6 @@ func cmdView(cmd *cobra.Command, args []string) {
 }
 
 func ReadInTable(cmd, args string) map[string][]string {
-
 	run := exec.Command(cmd, args)
 	stdout, err := run.StdoutPipe()
 	if err != nil {
