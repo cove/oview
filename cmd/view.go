@@ -67,6 +67,7 @@ func cmdView(cmd *cobra.Command, args []string) {
 	for j := range table {
 		cp.Add(j, table[j])
 	}
+
 	app.SetInterval(time.Duration(5*time.Second), nil,
 		func(i interface{}) {
 			table := ReadInTable()

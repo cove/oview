@@ -15,7 +15,6 @@
 package txt
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"testing"
@@ -40,8 +39,7 @@ func TestNewTable(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			table, err := NewTable(tt.args.fd)
-			fmt.Println(table)
+			_, err := NewTable(tt.args.fd)
 			if err != tt.want {
 				t.Errorf("isTableHeader() = %v, want %v", err, tt.want)
 			}

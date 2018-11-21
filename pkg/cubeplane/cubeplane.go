@@ -76,8 +76,7 @@ func (c *CubePlane) Add(id string, attrs []string) {
 func (c *CubePlane) Update(id string, attrs []string) {
 	if mat, ok := c.materialsById[id]; ok {
 		cpu, _ := strconv.ParseFloat(attrs[2], 64)
-		redpercent := float32(cpu / 255)
-		mat.SetColor(&math32.Color{redpercent, 0, 0})
+		mat.SetColor(&math32.Color{float32(cpu), 0, 0})
 	}
 }
 
