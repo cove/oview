@@ -26,12 +26,11 @@ import (
 )
 
 type CubePlane struct {
-	app          *application.Application
-	Cubemat      map[string]*material.Phong
-	CubematIndex []*material.Phong
-
-	Cubemesh  map[string]*graphic.Mesh
-	Cubeattrs map[string][]string
+	app            *application.Application
+	materialsById  map[string]*material.Phong
+	attributesById map[string][]string
+	materials      []*material.Phong
+	assigned       int
 }
 
 func Init(app *application.Application) *CubePlane {
@@ -39,7 +38,7 @@ func Init(app *application.Application) *CubePlane {
 	// Add lights to the scene
 	ambientLight := light.NewAmbient(&math32.Color{1.0, 1.0, 1.0}, 0.8)
 	app.Scene().Add(ambientLight)
-	pointLight := light.NewPoint(&math32.Color{1, 1, 1}, 15.0)
+	pointLight := light.NewPoint(&math32.Color{1, 1, 1}, 5.0)
 	pointLight.SetPosition(1, 0, 2)
 	app.Scene().Add(pointLight)
 
@@ -58,53 +57,49 @@ func Init(app *application.Application) *CubePlane {
 		})
 
 	c := &CubePlane{
-		app:       app,
-		Cubemat:   make(map[string]*material.Phong),
-		Cubemesh:  make(map[string]*graphic.Mesh),
-		Cubeattrs: make(map[string][]string),
+		app:            app,
+		materialsById:  make(map[string]*material.Phong),
+		attributesById: make(map[string][]string),
 	}
 
-	c.initCubes(10)
+	c.initCubePlane(10)
 
 	return c
 }
 
 func (c *CubePlane) Add(id string, attrs []string) {
-	cube := geometry.NewCube(1.0)
-	mat := material.NewPhong(math32.NewColor("DarkBlue"))
-	mesh := graphic.NewMesh(cube, mat)
-	c.Cubemat[id] = mat
-	c.Cubemesh[id] = mesh
-	c.Cubeattrs[id] = attrs
-
-	//pos := c.getNextGridPosition()
-	//mesh.SetPositionVec(pos)
-
-	c.app.Scene().Add(mesh)
+	c.materialsById[id] = c.materials[c.assigned]
+	c.attributesById[id] = attrs
+	c.assigned--
 }
 
 func (c *CubePlane) Update(id string, attrs []string) {
-	if mat, ok := c.Cubemat[id]; ok {
+	if mat, ok := c.materialsById[id]; ok {
 		cpu, _ := strconv.ParseFloat(attrs[2], 64)
 		redpercent := float32(cpu / 255)
 		mat.SetColor(&math32.Color{redpercent, 0, 0})
 	}
 }
 
-func (c *CubePlane) initCubes(size float32) {
+func (c *CubePlane) initCubePlane(size float32) {
 	for x := -size; x < size; x++ {
-		cube := geometry.NewCube(1.0)
+		cube := geometry.NewCube(.5)
 		mat := material.NewPhong(math32.NewColor("DarkBlue"))
 		mesh := graphic.NewMesh(cube, mat)
 		mesh.SetPosition(float32(x), 0, 0.0)
 		c.app.Scene().Add(mesh)
+		c.materials = append(c.materials, mat)
+		c.assigned++
 
 		for y := -size; y < size; y++ {
-			cube := geometry.NewCube(1.0)
+			cube := geometry.NewCube(.5)
 			mat := material.NewPhong(math32.NewColor("DarkBlue"))
 			mesh := graphic.NewMesh(cube, mat)
 			mesh.SetPosition(float32(x), float32(y), 0.0)
 			c.app.Scene().Add(mesh)
+			c.materials = append(c.materials, mat)
+			c.assigned++
 		}
 	}
+	c.assigned--
 }
