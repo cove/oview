@@ -183,7 +183,7 @@ func (c *CubePlane) initCubePlane(size float32) {
 	for x := -size; x <= size; x++ {
 		for y := -size; y <= size; y++ {
 			cube := geometry.NewCube(.5)
-			mat := material.NewPhong(math32.NewColor("DarkBlue"))
+			mat := material.NewPhong(math32.NewColor("Black"))
 			mesh := graphic.NewMesh(cube, mat)
 			mesh.SetPosition(float32(x), float32(y), 0.0)
 			c.app.Scene().Add(mesh)

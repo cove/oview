@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/cove/oq/pkg/cubeplane"
@@ -63,14 +64,14 @@ func cmdView(cmd *cobra.Command, args []string) {
 
 	cp := cubeplane.Init(app)
 
-	table := ReadInTable()
+	table := ReadInTable(args[0], strings.Join(args[1:], " "))
 	for j := range table {
 		cp.Add(j, table[j])
 	}
 
 	app.SetInterval(time.Duration(5*time.Second), nil,
 		func(i interface{}) {
-			table := ReadInTable()
+			table := ReadInTable(args[0], strings.Join(args[1:], " "))
 			for j := range table {
 				cp.Update(j, table[j])
 			}
@@ -79,20 +80,20 @@ func cmdView(cmd *cobra.Command, args []string) {
 	app.Run()
 }
 
-func ReadInTable() map[string][]string {
+func ReadInTable(cmd, args string) map[string][]string {
 
-	cmd := exec.Command("/bin/ps", "aux")
-	stdout, err := cmd.StdoutPipe()
+	run := exec.Command(cmd, args)
+	stdout, err := run.StdoutPipe()
 	if err != nil {
 		panic(err)
 	}
 
-	if err := cmd.Start(); err != nil {
+	if err := run.Start(); err != nil {
 		panic(err)
 	}
 	table, _ := txt.NewTable(stdout)
 
-	if err := cmd.Wait(); err != nil {
+	if err := run.Wait(); err != nil {
 		panic(err)
 	}
 	return table
