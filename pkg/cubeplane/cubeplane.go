@@ -75,14 +75,41 @@ func Init(app *application.Application) *CubePlane {
 		})
 
 	app.Window().SubscribeID(window.OnKeyDown, 1, func(ev string, i interface{}) {
+		c.materialsByXY[c.selectedX][c.selectedY].SetEmissiveColor(&math32.Color{0, 0, 0})
 		key := i.(*window.KeyEvent)
 		switch key.Keycode {
 		case window.KeyUp:
 		case window.KeyW:
 			c.selectedY++
-			c.materialsByXY[c.selectedX][c.selectedY].SetEmissiveColor(&math32.Color{0, 255, 255})
-			return
+			break
+
+		case window.KeyDown:
+		case window.KeyS:
+			c.selectedY--
+			break
+
+		case window.KeyLeft:
+		case window.KeyA:
+			c.selectedX--
+			break
+
+		case window.KeyRight:
+		case window.KeyD:
+			c.selectedX++
+			break
 		}
+
+		if c.selectedX > 0 && c.selectedX > c.size {
+			c.selectedX = -c.size
+		} else if c.selectedX < 0 && c.selectedX < -c.size {
+			c.selectedX = c.size
+		} else if c.selectedY > 0 && c.selectedY > c.size {
+			c.selectedY = -c.size
+		} else if c.selectedY < 0 && c.selectedY < -c.size {
+			c.selectedY = c.size
+		}
+
+		c.materialsByXY[c.selectedX][c.selectedY].SetEmissiveColor(&math32.Color{0, 1, 1})
 		fmt.Printf("interface i = %v", i)
 	})
 
@@ -113,8 +140,8 @@ func (c *CubePlane) Update(id string, attrs []string) {
 }
 
 func (c *CubePlane) initCubePlane(size float32) {
-	for x := -size; x < size; x++ {
-		for y := -size; y < size; y++ {
+	for x := -size; x <= size; x++ {
+		for y := -size; y <= size; y++ {
 			cube := geometry.NewCube(.5)
 			mat := material.NewPhong(math32.NewColor("DarkBlue"))
 			mesh := graphic.NewMesh(cube, mat)
