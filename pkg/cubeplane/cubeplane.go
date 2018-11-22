@@ -19,6 +19,8 @@ import (
 	"path"
 	"strconv"
 
+	"github.com/g3n/engine/core"
+
 	"github.com/g3n/engine/renderer"
 
 	"github.com/g3n/engine/gls"
@@ -48,8 +50,11 @@ type CubePlane struct {
 	command string
 	Header  []string
 
-	selectedX float32
-	selectedY float32
+	selectedX    float32
+	selectedY    float32
+	selectedNode *core.Node
+
+	rc *core.Raycaster
 }
 
 func Init(app *application.Application, cmd string) *CubePlane {
@@ -115,21 +120,65 @@ func Init(app *application.Application, cmd string) *CubePlane {
 		command:                cmd,
 	}
 
-	app.Subscribe(application.OnAfterRender,
-		func(ev string, i interface{}) {
-			app.Scene().RotateOnAxis(&math32.Vector3{0, 0, 1}, .003)
-		})
+	//app.Subscribe(application.OnAfterRender, func(ev string, i interface{}) {
+	//	app.Scene().RotateOnAxis(&math32.Vector3{0, 0, 1}, .003)
+	//})
 
-	app.Window().SubscribeID(window.OnKeyDown, 1, func(ev string, i interface{}) {
-		handleKeyPress(ev, i, c)
+	app.Window().Subscribe(window.OnKeyDown, func(ev string, i interface{}) {
+		onKey(ev, i, c)
 	})
 
+	c.rc = core.NewRaycaster(&math32.Vector3{}, &math32.Vector3{})
+	c.rc.LinePrecision = 0.05
+	c.rc.PointPrecision = 0.05
+	app.Window().Subscribe(window.OnMouseDown, func(ev string, i interface{}) {
+		c.onMouse(ev, i)
+	})
 	c.initCubePlane(size)
 
 	return c
 }
 
-func handleKeyPress(ev string, i interface{}, c *CubePlane) {
+func (c *CubePlane) onMouse(ev string, i interface{}) {
+
+	// Convert mouse coordinates to normalized device coordinates
+	mev := i.(*window.MouseEvent)
+	width, height := c.app.Window().Size()
+	x := 2*(mev.Xpos/float32(width)) - 1
+	y := -2*(mev.Ypos/float32(height)) + 1
+
+	// Set the raycaster from the current camera and mouse coordinates
+	_ = c.app.Camera().SetRaycaster(c.rc, x, y)
+	//fmt.Printf("rc:%+v\n", c.rc.Ray)
+
+	// Checks intersection with all objects in the scene
+	intersects := c.rc.IntersectObjects(c.app.Scene().Children(), true)
+	fmt.Printf("intersects:%+v\n", intersects)
+	if len(intersects) == 0 {
+		return
+	}
+
+	// Get first intersection
+	obj := intersects[0].Object
+	// Convert INode to IGraphic
+	ig, ok := obj.(graphic.IGraphic)
+	if !ok {
+		return
+	}
+	// Get graphic object
+	gr := ig.GetGraphic()
+	imat := gr.GetMaterial(0)
+	type matI interface {
+		EmissiveColor() math32.Color
+		SetEmissiveColor(*math32.Color)
+	}
+
+	if v, ok := imat.(matI); ok {
+		v.SetEmissiveColor(&math32.Color{0, 100, 0})
+	}
+}
+
+func onKey(ev string, i interface{}, c *CubePlane) {
 	mat := c.materialsByXY[c.selectedX][c.selectedY]
 	mat.SetEmissiveColor(&math32.Color{0, 0, 0})
 
