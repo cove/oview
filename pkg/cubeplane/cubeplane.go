@@ -144,8 +144,13 @@ func (c *CubePlane) onMouse(ev string, i interface{}) {
 	// Convert mouse coordinates to normalized device coordinates
 	mev := i.(*window.MouseEvent)
 	width, height := c.app.Window().Size()
-	x := 2*(mev.Xpos/float32(width)) - 1
-	y := -2*(mev.Ypos/float32(height)) + 1
+	// Linux and Windows
+	//x := 2*(mev.Xpos/float32(width)) - 1
+	//y := -2*(mev.Ypos/float32(height)) + 1
+
+	// OSX
+	x := 1.00*(mev.Xpos/float32(width)) - 1
+	y := -1.00*(mev.Ypos/float32(height)) + 1
 
 	// Set the raycaster from the current camera and mouse coordinates
 	_ = c.app.Camera().SetRaycaster(c.rc, x, y)
@@ -153,7 +158,7 @@ func (c *CubePlane) onMouse(ev string, i interface{}) {
 
 	// Checks intersection with all objects in the scene
 	intersects := c.rc.IntersectObjects(c.app.Scene().Children(), true)
-	fmt.Printf("intersects:%+v\n", intersects)
+	//fmt.Printf("intersects:%+v\n", intersects)
 	if len(intersects) == 0 {
 		return
 	}
@@ -165,6 +170,7 @@ func (c *CubePlane) onMouse(ev string, i interface{}) {
 	if !ok {
 		return
 	}
+
 	// Get graphic object
 	gr := ig.GetGraphic()
 	imat := gr.GetMaterial(0)
@@ -176,6 +182,7 @@ func (c *CubePlane) onMouse(ev string, i interface{}) {
 	if v, ok := imat.(matI); ok {
 		v.SetEmissiveColor(&math32.Color{0, 100, 0})
 	}
+
 }
 
 func onKey(ev string, i interface{}, c *CubePlane) {
