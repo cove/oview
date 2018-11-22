@@ -16,6 +16,7 @@ package cubeplane
 
 import (
 	"fmt"
+	"path"
 	"strconv"
 
 	"github.com/g3n/engine/renderer"
@@ -45,6 +46,7 @@ type CubePlane struct {
 	assignedY              float32
 
 	command string
+	Header  []string
 
 	selectedX float32
 	selectedY float32
@@ -76,7 +78,7 @@ func Init(app *application.Application, cmd string) *CubePlane {
 
 	l1 := gui.NewLabel("oq command: " + cmd)
 	width, _ := app.Window().Size()
-	l1.SetPosition(float32(width)-130, 10)
+	l1.SetPosition(float32(width)-230, 10)
 	l1.SetPaddings(2, 2, 2, 2)
 	l1.SetFontSize(12.0)
 	root.Add(l1)
@@ -114,57 +116,87 @@ func Init(app *application.Application, cmd string) *CubePlane {
 	}
 
 	app.Subscribe(application.OnAfterRender,
-		func(evname string, ev interface{}) {
+		func(ev string, i interface{}) {
 			app.Scene().RotateOnAxis(&math32.Vector3{0, 0, 1}, .003)
 		})
 
 	app.Window().SubscribeID(window.OnKeyDown, 1, func(ev string, i interface{}) {
-		mat := c.materialsByXY[c.selectedX][c.selectedY]
-		mat.SetEmissiveColor(&math32.Color{0, 0, 0})
-
-		key := i.(*window.KeyEvent)
-		switch key.Keycode {
-		case window.KeyUp:
-		case window.KeyW:
-			c.selectedY++
-			break
-
-		case window.KeyDown:
-		case window.KeyS:
-			c.selectedY--
-			break
-
-		case window.KeyLeft:
-		case window.KeyA:
-			c.selectedX--
-			break
-
-		case window.KeyRight:
-		case window.KeyD:
-			c.selectedX++
-			break
-		}
-
-		// wrap cursor on plane
-		if c.selectedX > 0 && c.selectedX > c.size {
-			c.selectedX = -c.size
-		} else if c.selectedX < 0 && c.selectedX < -c.size {
-			c.selectedX = c.size
-		} else if c.selectedY > 0 && c.selectedY > c.size {
-			c.selectedY = -c.size
-		} else if c.selectedY < 0 && c.selectedY < -c.size {
-			c.selectedY = c.size
-		}
-
-		mat = c.materialsByXY[c.selectedX][c.selectedY]
-		mat.SetEmissiveColor(&math32.Color{0, 100, 0})
-		id := c.attributesIDByMaterial[mat]
-		fmt.Printf("Selected: %v\n", c.attributesByID[id])
+		handleKeyPress(ev, i, c)
 	})
 
 	c.initCubePlane(size)
 
 	return c
+}
+
+func handleKeyPress(ev string, i interface{}, c *CubePlane) {
+	mat := c.materialsByXY[c.selectedX][c.selectedY]
+	mat.SetEmissiveColor(&math32.Color{0, 0, 0})
+
+	key := i.(*window.KeyEvent)
+	switch key.Keycode {
+	case window.KeyUp:
+	case window.KeyW:
+		c.selectedY++
+		break
+
+	case window.KeyDown:
+	case window.KeyS:
+		c.selectedY--
+		break
+
+	case window.KeyLeft:
+	case window.KeyA:
+		c.selectedX--
+		break
+
+	case window.KeyRight:
+	case window.KeyD:
+		c.selectedX++
+		break
+	}
+
+	// wrap cursor on plane
+	if c.selectedX > 0 && c.selectedX > c.size {
+		c.selectedX = -c.size
+	} else if c.selectedX < 0 && c.selectedX < -c.size {
+		c.selectedX = c.size
+	} else if c.selectedY > 0 && c.selectedY > c.size {
+		c.selectedY = -c.size
+	} else if c.selectedY < 0 && c.selectedY < -c.size {
+		c.selectedY = c.size
+	}
+
+	// update details text
+	mat = c.materialsByXY[c.selectedX][c.selectedY]
+	mat.SetEmissiveColor(&math32.Color{0, 100, 0})
+	id := c.attributesIDByMaterial[mat]
+
+	c.app.Gui().RemoveAll(false)
+	l1 := gui.NewLabel("oq command: " + c.command)
+	width, _ := c.app.Gui().Window().Size()
+	l1.SetPosition(float32(width)-230, 10)
+	l1.SetPaddings(2, 2, 2, 2)
+	l1.SetFontSize(12.0)
+	c.app.Gui().Add(l1)
+
+	// if we dont' have an ID it's because the cube wasn't
+	// assigned anything so we can skip the details update
+	if id == "" {
+		return
+	}
+
+	for i := range c.Header {
+		var basename string
+		if val := c.attributesByID[id][i]; val != "" {
+			basename = path.Base(c.attributesByID[id][i]) // basename everything to fit things on screen better, esp paths
+		}
+		selected := fmt.Sprintf("%v %v", c.Header[i], basename)
+		attrs := gui.NewLabel(selected)
+		attrs.SetPosition(float32(width)-230, 50.0+(float32(i)*15.0))
+		attrs.SetPaddings(2, 2, 2, 2)
+		c.app.Gui().Add(attrs)
+	}
 }
 
 func (c *CubePlane) Add(id string, attrs []string) {

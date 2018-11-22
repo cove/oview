@@ -23,15 +23,8 @@ import (
 	"unicode"
 )
 
-/*
-USER               PID  %CPU %MEM      VSZ    RSS   TT  STAT STARTED      TIME COMMAND
-cove             19666  19.3  0.3  4609988  49760   ??  S     1:18PM   0:01.34 _windowserver
-*/
-
-func NewTable(fd io.Reader) (map[string][]string, error) {
-
+func NewTable(fd io.Reader) (map[string][]string, []string, error) {
 	tmpTable := make([][]string, 500)
-
 	scanner := bufio.NewScanner(fd)
 	for i := range tmpTable {
 		if ok := scanner.Scan(); !ok {
@@ -48,7 +41,7 @@ func NewTable(fd io.Reader) (map[string][]string, error) {
 		}
 	}
 
-	key := findFirstUniqueValuedColumn(tmpTable)
+	key, header := findFirstUniqueValuedColumn(tmpTable)
 	if key < 0 {
 		panic("no key column")
 	}
@@ -61,16 +54,18 @@ func NewTable(fd io.Reader) (map[string][]string, error) {
 		newTable[tmpTable[y][key]] = tmpTable[y]
 	}
 
-	return newTable, nil
+	return newTable, header, nil
 }
 
-func findFirstUniqueValuedColumn(table [][]string) int {
+func findFirstUniqueValuedColumn(table [][]string) (int, []string) {
 
+	var header []string
 	uniqueColumn := -1
 	for x := range table[0] {
 		previous := ""
 		for y := range table {
 			if isTableHeader(strings.Join(table[y], " ")) {
+				header = table[y]
 				continue
 			}
 
@@ -93,7 +88,7 @@ func findFirstUniqueValuedColumn(table [][]string) int {
 		}
 	}
 
-	return uniqueColumn
+	return uniqueColumn, header
 }
 
 func isTableHeader(s string) bool {

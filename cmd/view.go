@@ -68,14 +68,15 @@ func cmdView(cmd *cobra.Command, args []string) {
 
 	cp := cubeplane.Init(app, strings.Join(args, " "))
 
-	table := ReadInTable(args[0], strings.Join(args[1:], " "))
+	table, header := ReadInTable(args[0], strings.Join(args[1:], " "))
 	for j := range table {
 		cp.Add(j, table[j])
 	}
+	cp.Header = header
 
 	app.SetInterval(time.Duration(5*time.Second), nil,
 		func(i interface{}) {
-			table := ReadInTable(args[0], strings.Join(args[1:], " "))
+			table, _ := ReadInTable(args[0], strings.Join(args[1:], " "))
 			for j := range table {
 				cp.Update(j, table[j])
 			}
@@ -84,7 +85,7 @@ func cmdView(cmd *cobra.Command, args []string) {
 	app.Run()
 }
 
-func ReadInTable(cmd, args string) map[string][]string {
+func ReadInTable(cmd, args string) (map[string][]string, []string) {
 	run := exec.Command(cmd, args)
 	stdout, err := run.StdoutPipe()
 	if err != nil {
@@ -94,10 +95,10 @@ func ReadInTable(cmd, args string) map[string][]string {
 	if err := run.Start(); err != nil {
 		panic(err)
 	}
-	table, _ := txt.NewTable(stdout)
+	table, header, _ := txt.NewTable(stdout)
 
 	if err := run.Wait(); err != nil {
 		panic(err)
 	}
-	return table
+	return table, header
 }
