@@ -70,7 +70,7 @@ func cmdView(cmd *cobra.Command, args []string) {
 
 	table, header := ReadInTable(args[0], strings.Join(args[1:], " "))
 	for j := range table {
-		cp.Add(j, table[j])
+		cp.Update(j, table[j])
 	}
 	cp.Header = header
 
@@ -80,6 +80,7 @@ func cmdView(cmd *cobra.Command, args []string) {
 			for j := range table {
 				cp.Update(j, table[j])
 			}
+			cp.UpdateReset()
 		})
 
 	app.Run()

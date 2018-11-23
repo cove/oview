@@ -38,14 +38,8 @@ import (
 )
 
 type CubePlane struct {
-	app                    *application.Application
-	materialsByID          map[string]*material.Phong
-	attributesIDByMaterial map[*material.Phong]string
-	attributesByID         map[string][]string
-	materialsByXY          map[float32]map[float32]*material.Phong
-	size                   float32
-	assignedX              float32
-	assignedY              float32
+	app  *application.Application
+	size float32
 
 	command string
 	Header  []string
@@ -116,23 +110,17 @@ func Init(app *application.Application, cmd string) *CubePlane {
 	gs.ClearColor(0.0394, 0.1601, 0.1983, 1.0)
 
 	app.TimerManager.Initialize()
-	size := float32(25.0)
+	size := float32(50.0)
 
 	c := &CubePlane{
-		app:                    app,
-		materialsByID:          make(map[string]*material.Phong),
-		attributesIDByMaterial: make(map[*material.Phong]string),
-		attributesByID:         make(map[string][]string),
-		size:                   size,
-		assignedX:              -size,
-		assignedY:              -size,
-		materialsByXY:          make(map[float32]map[float32]*material.Phong),
-		command:                cmd,
+		app:     app,
+		size:    size,
+		command: cmd,
 	}
 
-	//app.Subscribe(application.OnAfterRender, func(ev string, i interface{}) {
-	//	app.Scene().RotateOnAxis(&math32.Vector3{0, 0, 1}, .003)
-	//})
+	app.Subscribe(application.OnAfterRender, func(ev string, i interface{}) {
+		app.Scene().RotateOnAxis(&math32.Vector3{0, 0, 1}, .003)
+	})
 
 	app.Window().Subscribe(window.OnKeyDown, func(ev string, i interface{}) {
 		onKey(ev, i, c)
@@ -142,6 +130,7 @@ func Init(app *application.Application, cmd string) *CubePlane {
 	app.Window().Subscribe(window.OnMouseDown, func(ev string, i interface{}) {
 		c.onMouse(ev, i)
 	})
+
 	c.initCubePlane(size)
 
 	return c
@@ -271,10 +260,14 @@ func (c *CubePlane) updateSelected() {
 	}
 }
 
-func (c *CubePlane) Add(id string, attrs []string) {
+func (c *CubePlane) Update(id string, attrs []string) {
+
+	node := c.plane[c.nextX][c.nextY]
 	d := CubeData{attrs: attrs, locX: c.nextX, locY: c.nextY}
-	c.plane[c.nextX][c.nextY].SetUserData(d)
-	c.plane[c.nextX][c.nextY].SetName(id)
+	node.SetUserData(d)
+	node.SetName(id)
+
+	c.updatePlaneGfx()
 
 	c.nextX++
 	if c.nextX >= int(c.size) {
@@ -287,11 +280,27 @@ func (c *CubePlane) Add(id string, attrs []string) {
 	}
 }
 
-func (c *CubePlane) Update(id string, attrs []string) {
-	if mat, ok := c.materialsByID[id]; ok && mat != nil {
-		cpu, _ := strconv.ParseFloat(attrs[2], 64)
-		mat.SetEmissiveColor(&math32.Color{float32(cpu), 0, 0})
+func (c CubePlane) updatePlaneGfx() {
+
+	node := c.plane[c.nextX][c.nextY]
+	type meshI interface {
+		EmissiveColor() math32.Color
+		SetEmissiveColor(*math32.Color)
 	}
+	ig := node.Children()[0].(graphic.IGraphic)
+	gr := ig.GetGraphic()
+	mesh := gr.GetMaterial(0).(meshI)
+
+	ud := node.UserData().(CubeData)
+
+	cpu, _ := strconv.ParseFloat(ud.attrs[2], 64)
+	mesh.SetEmissiveColor(&math32.Color{float32(cpu), 0, 0})
+
+}
+
+func (c *CubePlane) UpdateReset() {
+	c.nextX = 0
+	c.nextY = 0
 }
 
 func (c *CubePlane) initCubePlane(size float32) {
