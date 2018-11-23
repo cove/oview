@@ -318,7 +318,12 @@ func (c *CubePlane) initCubePlane(size float32) {
 			cube := geometry.NewCube(.5)
 			mat := material.NewPhong(math32.NewColorHex(0x002b36))
 			mesh := graphic.NewMesh(cube, mat)
-			node.SetPosition(float32(x), float32(y), 0.0)
+
+			// shift cube positions so that rotational axis is in the center,
+			// while keeping simpler zero based grid coordinates
+			posX := float32(x) - (size / 2)
+			posY := float32(y) - (size / 2)
+			node.SetPosition(posX, posY, 0.0)
 			node.Add(mesh)
 			c.app.Scene().Add(node)
 			c.plane[x][y] = node
