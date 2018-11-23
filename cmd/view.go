@@ -80,7 +80,6 @@ func cmdView(cmd *cobra.Command, args []string) {
 			for j := range table {
 				cp.Update(j, table[j])
 			}
-			cp.UpdateReset()
 		})
 
 	app.Run()

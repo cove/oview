@@ -39,28 +39,26 @@ import (
 
 type CubePlane struct {
 	app  *application.Application
-	size int
+	size int64
 
 	command string
 	Header  []string
 
-	cursorX      int
-	cursorY      int
+	cursorX      int64
+	cursorY      int64
 	selectedNode *core.Node
 
 	rc *core.Raycaster
 
 	plane [][]*core.Node
-	nextX int
-	nextY int
 
 	rotate bool
 }
 
 type CubeData struct {
 	attrs []string
-	locX  int
-	locY  int
+	locX  int64
+	locY  int64
 }
 
 func Init(app *application.Application, cmd string) *CubePlane {
@@ -112,7 +110,9 @@ func Init(app *application.Application, cmd string) *CubePlane {
 	gs.ClearColor(0.0394, 0.1601, 0.1983, 1.0)
 
 	app.TimerManager.Initialize()
-	size := 20
+
+	// default plane size
+	size := int64(20)
 
 	c := &CubePlane{
 		app:     app,
@@ -153,8 +153,8 @@ func (c *CubePlane) onMouse(evname string, ev interface{}) {
 	//y := -2*(mev.Ypos/float32(height)) + 1
 
 	// OSX
-	x := 1.00*(mev.Xpos/float32(width)) - 1
-	y := -1.00*(mev.Ypos/float32(height)) + 1
+	x := 1*(mev.Xpos/float32(width)) - 1
+	y := -1*(mev.Ypos/float32(height)) + 1
 
 	// Set the raycaster from the current camera and mouse coordinates
 	_ = c.app.Camera().SetRaycaster(c.rc, x, y)
@@ -261,10 +261,8 @@ func (c *CubePlane) updateSelected() {
 		EmissiveColor() math32.Color
 		SetEmissiveColor(*math32.Color)
 	}
-
-	if v, ok := imat.(matI); ok {
-		v.SetEmissiveColor(&math32.Color{0, 1, 0})
-	}
+	cubemat := imat.(matI)
+	cubemat.SetEmissiveColor(&math32.Color{0, 1, 0})
 
 	// draw hud text
 	c.app.Gui().RemoveAll(false)
@@ -291,57 +289,53 @@ func (c *CubePlane) updateSelected() {
 
 func (c *CubePlane) Update(id string, attrs []string) {
 
-	node := c.plane[c.nextX][c.nextY]
-	d := CubeData{attrs: attrs, locX: c.nextX, locY: c.nextY}
-	node.SetUserData(d)
-	node.SetName(id)
+	// try to position id's on plane in a predictable order
+	x, _ := strconv.ParseInt(id, 10, 64)
+	y := x
 
-	c.updatePlaneGfx()
+	x %= c.size - 1
+	y %= c.size - 1
 
-	c.nextX++
-	if c.nextX >= c.size {
-		c.nextX = 0
-	}
-
-	if c.nextY >= c.size {
-		panic("out of space for nodes")
+	for j := range c.plane[0][y:] {
+		for i := range c.plane[x:][j] {
+			node := c.plane[i][j]
+			if node.Name() == "" || node.Name() == id {
+				d := CubeData{attrs: attrs, locX: int64(i), locY: int64(j)}
+				node.SetUserData(d)
+				node.SetName(id)
+				c.updateNodeGfx(node)
+				return
+			}
+		}
 	}
 }
 
-func (c CubePlane) updatePlaneGfx() {
+func (c CubePlane) updateNodeGfx(node *core.Node) {
 
-	node := c.plane[c.nextX][c.nextY]
 	type meshI interface {
 		EmissiveColor() math32.Color
 		SetEmissiveColor(*math32.Color)
 	}
 	ig := node.Children()[0].(graphic.IGraphic)
 	gr := ig.GetGraphic()
-	mesh := gr.GetMaterial(0).(meshI)
-
+	imesh := gr.GetMaterial(0).(meshI)
 	ud := node.UserData().(CubeData)
 
 	cpu, _ := strconv.ParseFloat(ud.attrs[2], 64)
-	mesh.SetEmissiveColor(&math32.Color{float32(cpu), 0, 0})
-
+	imesh.SetEmissiveColor(&math32.Color{float32(cpu), 0, 0})
 }
 
-func (c *CubePlane) UpdateReset() {
-	c.nextX = 0
-	c.nextY = 0
-}
-
-func (c *CubePlane) initCubePlane(size int) {
+func (c *CubePlane) initCubePlane(size int64) {
 
 	// allocate matrix
 	c.plane = make([][]*core.Node, size)
-	for x := 0; x < size; x++ {
+	for x := int64(0); x < size; x++ {
 		c.plane[x] = make([]*core.Node, size)
 	}
 
 	// create nodes
-	for y := 0; y < size; y++ {
-		for x := 0; x < size; x++ {
+	for y := int64(0); y < size; y++ {
+		for x := int64(0); x < size; x++ {
 			node := core.NewNode()
 			cube := geometry.NewCube(.5)
 			mat := material.NewPhong(math32.NewColorHex(0x002b36))
