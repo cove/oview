@@ -53,6 +53,8 @@ type CubePlane struct {
 	plane [][]*core.Node
 	nextX int
 	nextY int
+
+	rotate bool
 }
 
 type CubeData struct {
@@ -118,16 +120,18 @@ func Init(app *application.Application, cmd string) *CubePlane {
 		command: cmd,
 	}
 
-	//app.Subscribe(application.OnAfterRender, func(evname string, ev interface{}) {
-	//	app.Scene().RotateOnAxis(&math32.Vector3{0, 0, 1}, .003)
-	//})
-
 	app.Window().Subscribe(window.OnKeyDown, func(evname string, ev interface{}) {
 		c.onKey(evname, ev)
 	})
 
 	app.Window().Subscribe(window.OnKeyRepeat, func(evname string, ev interface{}) {
 		c.onKey(evname, ev)
+	})
+
+	c.app.SubscribeID(application.OnAfterRender, 1, func(evname string, ev interface{}) {
+		if c.rotate {
+			c.app.Scene().RotateOnAxis(&math32.Vector3{0, 0, 1}, -.003)
+		}
 	})
 
 	c.rc = core.NewRaycaster(&math32.Vector3{}, &math32.Vector3{})
@@ -203,6 +207,12 @@ func (c *CubePlane) onKey(evname string, ev interface{}) {
 		c.cursorY--
 		break
 
+	case window.KeyR:
+		if c.rotate {
+			c.rotate = false
+		} else {
+			c.rotate = true
+		}
 	}
 
 	// wrap cursor
