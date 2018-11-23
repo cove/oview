@@ -39,7 +39,7 @@ import (
 
 type CubePlane struct {
 	app  *application.Application
-	size float32
+	size int
 
 	command string
 	Header  []string
@@ -110,7 +110,7 @@ func Init(app *application.Application, cmd string) *CubePlane {
 	gs.ClearColor(0.0394, 0.1601, 0.1983, 1.0)
 
 	app.TimerManager.Initialize()
-	size := float32(50.0)
+	size := 20
 
 	c := &CubePlane{
 		app:     app,
@@ -118,17 +118,21 @@ func Init(app *application.Application, cmd string) *CubePlane {
 		command: cmd,
 	}
 
-	app.Subscribe(application.OnAfterRender, func(ev string, i interface{}) {
-		app.Scene().RotateOnAxis(&math32.Vector3{0, 0, 1}, .003)
+	//app.Subscribe(application.OnAfterRender, func(evname string, ev interface{}) {
+	//	app.Scene().RotateOnAxis(&math32.Vector3{0, 0, 1}, .003)
+	//})
+
+	app.Window().Subscribe(window.OnKeyDown, func(evname string, ev interface{}) {
+		c.onKey(evname, ev)
 	})
 
-	app.Window().Subscribe(window.OnKeyDown, func(ev string, i interface{}) {
-		onKey(ev, i, c)
+	app.Window().Subscribe(window.OnKeyRepeat, func(evname string, ev interface{}) {
+		c.onKey(evname, ev)
 	})
 
 	c.rc = core.NewRaycaster(&math32.Vector3{}, &math32.Vector3{})
-	app.Window().Subscribe(window.OnMouseDown, func(ev string, i interface{}) {
-		c.onMouse(ev, i)
+	app.Window().Subscribe(window.OnMouseDown, func(evname string, ev interface{}) {
+		c.onMouse(evname, ev)
 	})
 
 	c.initCubePlane(size)
@@ -136,9 +140,9 @@ func Init(app *application.Application, cmd string) *CubePlane {
 	return c
 }
 
-func (c *CubePlane) onMouse(ev string, i interface{}) {
+func (c *CubePlane) onMouse(evname string, ev interface{}) {
 	// Convert mouse coordinates to normalized device coordinates
-	mev := i.(*window.MouseEvent)
+	mev := ev.(*window.MouseEvent)
 	width, height := c.app.Window().Size()
 	// Linux and Windows
 	//x := 2*(mev.Xpos/float32(width)) - 1
@@ -167,43 +171,56 @@ func (c *CubePlane) onMouse(ev string, i interface{}) {
 
 	node := ig.GetNode().Parent().GetNode()
 	ud, ok := node.UserData().(CubeData)
-	if !ok {
-		return
+	if ok {
+		c.cursorX = ud.locX
+		c.cursorY = ud.locY
 	}
-	c.cursorX = ud.locX
-	c.cursorY = ud.locY
 
 	c.updateSelected()
 }
 
-func onKey(ev string, i interface{}, c *CubePlane) {
+func (c *CubePlane) onKey(evname string, ev interface{}) {
 
-	key := i.(*window.KeyEvent)
+	key := ev.(*window.KeyEvent)
 	switch key.Keycode {
-	case window.KeyUp:
-	case window.KeyW:
-		c.cursorY++
-		c.updateSelected()
-		break
-
-	case window.KeyDown:
-	case window.KeyS:
-		c.cursorY--
-		c.updateSelected()
-		break
-
 	case window.KeyLeft:
 	case window.KeyA:
 		c.cursorX--
-		c.updateSelected()
 		break
 
 	case window.KeyRight:
 	case window.KeyD:
 		c.cursorX++
-		c.updateSelected()
 		break
+
+	case window.KeyUp:
+	case window.KeyW:
+		c.cursorY++
+		break
+
+	case window.KeyDown:
+	case window.KeyS:
+		c.cursorY--
+		break
+
 	}
+
+	// wrap cursor
+	if c.cursorX >= c.size {
+		c.cursorX = 0
+	}
+	if c.cursorX < 0 {
+		c.cursorX = c.size - 1
+	}
+	if c.cursorY >= c.size {
+		c.cursorY = 0
+	}
+	if c.cursorY < 0 {
+		c.cursorY = c.size - 1
+	}
+
+	c.updateSelected()
+
 }
 
 func (c *CubePlane) updateSelected() {
@@ -249,14 +266,21 @@ func (c *CubePlane) updateSelected() {
 	c.app.Gui().Add(l1)
 
 	node := c.plane[c.cursorX][c.cursorY]
-	d := node.UserData().(CubeData)
-	for i := range c.Header {
-		basename := path.Base(d.attrs[i]) // everything gets basenamed
-		selected := fmt.Sprintf("%v %v", c.Header[i], basename)
-		attrs := gui.NewLabel(selected)
-		attrs.SetPosition(float32(width)-230, 50.0+(float32(i)*15.0))
-		attrs.SetPaddings(2, 2, 2, 2)
-		c.app.Gui().Add(attrs)
+	d, ok := node.UserData().(CubeData)
+	if !ok {
+		// empty cube
+		return
+	}
+
+	if d.attrs != nil {
+		for i := range c.Header {
+			basename := path.Base(d.attrs[i]) // everything gets basenamed
+			selected := fmt.Sprintf("%v %v", c.Header[i], basename)
+			attrs := gui.NewLabel(selected)
+			attrs.SetPosition(float32(width)-230, 50.0+(float32(i)*15.0))
+			attrs.SetPaddings(2, 2, 2, 2)
+			c.app.Gui().Add(attrs)
+		}
 	}
 }
 
@@ -270,12 +294,11 @@ func (c *CubePlane) Update(id string, attrs []string) {
 	c.updatePlaneGfx()
 
 	c.nextX++
-	if c.nextX >= int(c.size) {
+	if c.nextX >= c.size {
 		c.nextX = 0
-		c.nextY++
 	}
 
-	if c.nextY >= int(c.size) {
+	if c.nextY >= c.size {
 		panic("out of space for nodes")
 	}
 }
@@ -303,17 +326,17 @@ func (c *CubePlane) UpdateReset() {
 	c.nextY = 0
 }
 
-func (c *CubePlane) initCubePlane(size float32) {
+func (c *CubePlane) initCubePlane(size int) {
 
 	// allocate matrix
-	c.plane = make([][]*core.Node, int(size))
-	for x := 0; x < int(size); x++ {
-		c.plane[x] = make([]*core.Node, int(size))
+	c.plane = make([][]*core.Node, size)
+	for x := 0; x < size; x++ {
+		c.plane[x] = make([]*core.Node, size)
 	}
 
 	// create nodes
-	for y := 0; y < int(size); y++ {
-		for x := 0; x < int(size); x++ {
+	for y := 0; y < size; y++ {
+		for x := 0; x < size; x++ {
 			node := core.NewNode()
 			cube := geometry.NewCube(.5)
 			mat := material.NewPhong(math32.NewColorHex(0x002b36))
@@ -321,9 +344,11 @@ func (c *CubePlane) initCubePlane(size float32) {
 
 			// shift cube positions so that rotational axis is in the center,
 			// while keeping simpler zero based grid coordinates
-			posX := float32(x) - (size / 2)
-			posY := float32(y) - (size / 2)
+			posX := float32(x) - (float32(size) / 2)
+			posY := float32(y) - (float32(size) / 2)
 			node.SetPosition(posX, posY, 0.0)
+			d := CubeData{locX: x, locY: y}
+			node.SetUserData(d)
 			node.Add(mesh)
 			c.app.Scene().Add(node)
 			c.plane[x][y] = node
