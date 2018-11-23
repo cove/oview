@@ -229,6 +229,9 @@ func (c *CubePlane) onKey(evname string, ev interface{}) {
 		} else {
 			c.rotate = true
 		}
+
+	case window.KeyQ:
+		c.app.Quit()
 	}
 }
 
@@ -244,10 +247,8 @@ func (c *CubePlane) updateSelected() {
 			EmissiveColor() math32.Color
 			SetEmissiveColor(*math32.Color)
 		}
-
-		if v, ok := imat.(matI); ok {
-			v.SetEmissiveColor(&math32.Color{0, 0, 0})
-		}
+		cubemat := imat.(matI)
+		cubemat.SetEmissiveColor(&math32.Color{0, 0, 0})
 	}
 
 	// highlight new selection
