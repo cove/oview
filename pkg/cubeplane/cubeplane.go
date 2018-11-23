@@ -50,11 +50,21 @@ type CubePlane struct {
 	command string
 	Header  []string
 
-	selectedX    float32
-	selectedY    float32
+	cursorX      int
+	cursorY      int
 	selectedNode *core.Node
 
 	rc *core.Raycaster
+
+	plane [][]*core.Node
+	nextX int
+	nextY int
+}
+
+type CubeData struct {
+	attrs []string
+	locX  int
+	locY  int
 }
 
 func Init(app *application.Application, cmd string) *CubePlane {
@@ -106,7 +116,7 @@ func Init(app *application.Application, cmd string) *CubePlane {
 	gs.ClearColor(0.0394, 0.1601, 0.1983, 1.0)
 
 	app.TimerManager.Initialize()
-	size := float32(10.0)
+	size := float32(25.0)
 
 	c := &CubePlane{
 		app:                    app,
@@ -129,8 +139,6 @@ func Init(app *application.Application, cmd string) *CubePlane {
 	})
 
 	c.rc = core.NewRaycaster(&math32.Vector3{}, &math32.Vector3{})
-	c.rc.LinePrecision = 0.05
-	c.rc.PointPrecision = 0.05
 	app.Window().Subscribe(window.OnMouseDown, func(ev string, i interface{}) {
 		c.onMouse(ev, i)
 	})
@@ -140,7 +148,6 @@ func Init(app *application.Application, cmd string) *CubePlane {
 }
 
 func (c *CubePlane) onMouse(ev string, i interface{}) {
-
 	// Convert mouse coordinates to normalized device coordinates
 	mev := i.(*window.MouseEvent)
 	width, height := c.app.Window().Size()
@@ -163,71 +170,87 @@ func (c *CubePlane) onMouse(ev string, i interface{}) {
 		return
 	}
 
-	// Get first intersection
 	obj := intersects[0].Object
-	// Convert INode to IGraphic
 	ig, ok := obj.(graphic.IGraphic)
 	if !ok {
 		return
 	}
 
-	// Get graphic object
+	node := ig.GetNode().Parent().GetNode()
+	ud, ok := node.UserData().(CubeData)
+	if !ok {
+		return
+	}
+	c.cursorX = ud.locX
+	c.cursorY = ud.locY
+
+	c.updateSelected()
+}
+
+func onKey(ev string, i interface{}, c *CubePlane) {
+
+	key := i.(*window.KeyEvent)
+	switch key.Keycode {
+	case window.KeyUp:
+	case window.KeyW:
+		c.cursorY++
+		c.updateSelected()
+		break
+
+	case window.KeyDown:
+	case window.KeyS:
+		c.cursorY--
+		c.updateSelected()
+		break
+
+	case window.KeyLeft:
+	case window.KeyA:
+		c.cursorX--
+		c.updateSelected()
+		break
+
+	case window.KeyRight:
+	case window.KeyD:
+		c.cursorX++
+		c.updateSelected()
+		break
+	}
+}
+
+func (c *CubePlane) updateSelected() {
+
+	// unhighlight previous selection
+	if c.selectedNode != nil {
+		ig, _ := c.selectedNode.Children()[0].(graphic.IGraphic)
+		gr := ig.GetGraphic()
+		imat := gr.GetMaterial(0)
+
+		type matI interface {
+			EmissiveColor() math32.Color
+			SetEmissiveColor(*math32.Color)
+		}
+
+		if v, ok := imat.(matI); ok {
+			v.SetEmissiveColor(&math32.Color{0, 0, 0})
+		}
+	}
+
+	// highlight new selection
+	c.selectedNode = c.plane[c.cursorX][c.cursorY]
+	ig, _ := c.selectedNode.Children()[0].(graphic.IGraphic)
 	gr := ig.GetGraphic()
 	imat := gr.GetMaterial(0)
+
 	type matI interface {
 		EmissiveColor() math32.Color
 		SetEmissiveColor(*math32.Color)
 	}
 
 	if v, ok := imat.(matI); ok {
-		v.SetEmissiveColor(&math32.Color{0, 100, 0})
+		v.SetEmissiveColor(&math32.Color{0, 1, 0})
 	}
 
-}
-
-func onKey(ev string, i interface{}, c *CubePlane) {
-	mat := c.materialsByXY[c.selectedX][c.selectedY]
-	mat.SetEmissiveColor(&math32.Color{0, 0, 0})
-
-	key := i.(*window.KeyEvent)
-	switch key.Keycode {
-	case window.KeyUp:
-	case window.KeyW:
-		c.selectedY++
-		break
-
-	case window.KeyDown:
-	case window.KeyS:
-		c.selectedY--
-		break
-
-	case window.KeyLeft:
-	case window.KeyA:
-		c.selectedX--
-		break
-
-	case window.KeyRight:
-	case window.KeyD:
-		c.selectedX++
-		break
-	}
-
-	// wrap cursor on plane
-	if c.selectedX > 0 && c.selectedX > c.size {
-		c.selectedX = -c.size
-	} else if c.selectedX < 0 && c.selectedX < -c.size {
-		c.selectedX = c.size
-	} else if c.selectedY > 0 && c.selectedY > c.size {
-		c.selectedY = -c.size
-	} else if c.selectedY < 0 && c.selectedY < -c.size {
-		c.selectedY = c.size
-	}
-
-	// update details text
-	mat = c.materialsByXY[c.selectedX][c.selectedY]
-	mat.SetEmissiveColor(&math32.Color{0, 100, 0})
-	id := c.attributesIDByMaterial[mat]
-
+	// draw hud text
 	c.app.Gui().RemoveAll(false)
 	l1 := gui.NewLabel("oq command: " + c.command)
 	width, _ := c.app.Gui().Window().Size()
@@ -236,17 +259,10 @@ func onKey(ev string, i interface{}, c *CubePlane) {
 	l1.SetFontSize(12.0)
 	c.app.Gui().Add(l1)
 
-	// if we dont' have an ID it's because the cube wasn't
-	// assigned anything so we can skip the details update
-	if id == "" {
-		return
-	}
-
+	node := c.plane[c.cursorX][c.cursorY]
+	d := node.UserData().(CubeData)
 	for i := range c.Header {
-		var basename string
-		if val := c.attributesByID[id][i]; val != "" {
-			basename = path.Base(c.attributesByID[id][i]) // basename everything to fit things on screen better, esp paths
-		}
+		basename := path.Base(d.attrs[i]) // everything gets basenamed
 		selected := fmt.Sprintf("%v %v", c.Header[i], basename)
 		attrs := gui.NewLabel(selected)
 		attrs.SetPosition(float32(width)-230, 50.0+(float32(i)*15.0))
@@ -256,18 +272,18 @@ func onKey(ev string, i interface{}, c *CubePlane) {
 }
 
 func (c *CubePlane) Add(id string, attrs []string) {
-	mat := c.materialsByXY[c.assignedX][c.assignedY]
-	c.materialsByID[id] = mat
-	c.attributesByID[id] = attrs
-	c.attributesIDByMaterial[mat] = id
-	if c.assignedX < c.size {
-		c.assignedX++
-	} else if c.assignedX >= c.size {
-		c.assignedX = -c.size
-		c.assignedY++
+	d := CubeData{attrs: attrs, locX: c.nextX, locY: c.nextY}
+	c.plane[c.nextX][c.nextY].SetUserData(d)
+	c.plane[c.nextX][c.nextY].SetName(id)
+
+	c.nextX++
+	if c.nextX >= int(c.size) {
+		c.nextX = 0
+		c.nextY++
 	}
-	if c.assignedY > c.size {
-		panic("out of grid space")
+
+	if c.nextY >= int(c.size) {
+		panic("out of space for nodes")
 	}
 }
 
@@ -279,18 +295,24 @@ func (c *CubePlane) Update(id string, attrs []string) {
 }
 
 func (c *CubePlane) initCubePlane(size float32) {
-	for x := -size; x <= size; x++ {
-		for y := -size; y <= size; y++ {
+
+	// allocate matrix
+	c.plane = make([][]*core.Node, int(size))
+	for x := 0; x < int(size); x++ {
+		c.plane[x] = make([]*core.Node, int(size))
+	}
+
+	// create nodes
+	for y := 0; y < int(size); y++ {
+		for x := 0; x < int(size); x++ {
+			node := core.NewNode()
 			cube := geometry.NewCube(.5)
 			mat := material.NewPhong(math32.NewColorHex(0x002b36))
 			mesh := graphic.NewMesh(cube, mat)
-			mesh.SetPosition(float32(x), float32(y), 0.0)
-			c.app.Scene().Add(mesh)
-
-			if _, ok := c.materialsByXY[x]; !ok {
-				c.materialsByXY[x] = make(map[float32]*material.Phong)
-			}
-			c.materialsByXY[x][y] = mat
+			node.SetPosition(float32(x), float32(y), 0.0)
+			node.Add(mesh)
+			c.app.Scene().Add(node)
+			c.plane[x][y] = node
 		}
 	}
 }
