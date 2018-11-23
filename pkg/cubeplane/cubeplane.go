@@ -190,21 +190,37 @@ func (c *CubePlane) onKey(evname string, ev interface{}) {
 	case window.KeyLeft:
 	case window.KeyA:
 		c.cursorX--
+		if c.cursorX < 0 {
+			c.cursorX = c.size - 1
+		}
+		c.updateSelected()
 		break
 
 	case window.KeyRight:
 	case window.KeyD:
 		c.cursorX++
+		if c.cursorX >= c.size {
+			c.cursorX = 0
+		}
+		c.updateSelected()
 		break
 
 	case window.KeyUp:
 	case window.KeyW:
 		c.cursorY++
+		if c.cursorY >= c.size {
+			c.cursorY = 0
+		}
+		c.updateSelected()
 		break
 
 	case window.KeyDown:
 	case window.KeyS:
 		c.cursorY--
+		if c.cursorY < 0 {
+			c.cursorY = c.size - 1
+		}
+		c.updateSelected()
 		break
 
 	case window.KeyR:
@@ -214,23 +230,6 @@ func (c *CubePlane) onKey(evname string, ev interface{}) {
 			c.rotate = true
 		}
 	}
-
-	// wrap cursor
-	if c.cursorX >= c.size {
-		c.cursorX = 0
-	}
-	if c.cursorX < 0 {
-		c.cursorX = c.size - 1
-	}
-	if c.cursorY >= c.size {
-		c.cursorY = 0
-	}
-	if c.cursorY < 0 {
-		c.cursorY = c.size - 1
-	}
-
-	c.updateSelected()
-
 }
 
 func (c *CubePlane) updateSelected() {
@@ -276,12 +275,7 @@ func (c *CubePlane) updateSelected() {
 	c.app.Gui().Add(l1)
 
 	node := c.plane[c.cursorX][c.cursorY]
-	d, ok := node.UserData().(CubeData)
-	if !ok {
-		// empty cube
-		return
-	}
-
+	d := node.UserData().(CubeData)
 	if d.attrs != nil {
 		for i := range c.Header {
 			basename := path.Base(d.attrs[i]) // everything gets basenamed
