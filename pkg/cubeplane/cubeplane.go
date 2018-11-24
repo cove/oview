@@ -71,8 +71,8 @@ func Init(app *application.Application, cmd string) *CubePlane {
 	app.Scene().Add(pointLight)
 
 	// Add an axis helper to the scene
-	//axis := graphic.NewAxisHelper(1.5)
-	//app.Scene().Add(axis)
+	axis := graphic.NewAxisHelper(1.5)
+	app.Scene().Add(axis)
 
 	app.CameraPersp().SetPosition(0, -15, 10)
 	app.CameraPersp().LookAt(&math32.Vector3{0, 0, 0})
@@ -130,7 +130,7 @@ func Init(app *application.Application, cmd string) *CubePlane {
 
 	c.app.SubscribeID(application.OnAfterRender, 1, func(evname string, ev interface{}) {
 		if c.rotate {
-			c.app.Scene().RotateOnAxis(&math32.Vector3{0, 0, 1}, -.003)
+			c.app.Scene().RotateOnAxis(&math32.Vector3{0, 0, 1}, -.03)
 		}
 	})
 
@@ -189,36 +189,68 @@ func (c *CubePlane) onKey(evname string, ev interface{}) {
 	switch key.Keycode {
 	case window.KeyLeft:
 	case window.KeyA:
-		c.cursorX--
-		if c.cursorX < 0 {
-			c.cursorX = c.size - 1
+		z := c.app.Scene().Rotation().Z
+		if z < math32.Pi/float32(2) && z > math32.Pi/float32(-2) {
+			c.cursorX--
+			if c.cursorX < 0 {
+				c.cursorX = c.size - 1
+			}
+		} else if z < math32.Pi && z > -math32.Pi {
+			c.cursorX++
+			if c.cursorX >= c.size {
+				c.cursorX = 0
+			}
 		}
 		c.updateSelected()
 		break
 
 	case window.KeyRight:
 	case window.KeyD:
-		c.cursorX++
-		if c.cursorX >= c.size {
-			c.cursorX = 0
+		z := c.app.Scene().Rotation().Z
+		if z < math32.Pi/float32(2) && z > math32.Pi/float32(-2) {
+			c.cursorX++
+			if c.cursorX >= c.size {
+				c.cursorX = 0
+			}
+		} else if z < math32.Pi && z > -math32.Pi {
+			c.cursorX--
+			if c.cursorX < 0 {
+				c.cursorX = c.size - 1
+			}
 		}
 		c.updateSelected()
 		break
 
 	case window.KeyUp:
 	case window.KeyW:
-		c.cursorY++
-		if c.cursorY >= c.size {
-			c.cursorY = 0
+		z := c.app.Scene().Rotation().Z
+		if z < math32.Pi/float32(2) && z > math32.Pi/float32(-2) {
+			c.cursorY++
+			if c.cursorY >= c.size {
+				c.cursorY = 0
+			}
+		} else if z < math32.Pi && z > -math32.Pi {
+			c.cursorY--
+			if c.cursorY < 0 {
+				c.cursorY = c.size - 1
+			}
 		}
 		c.updateSelected()
 		break
 
 	case window.KeyDown:
 	case window.KeyS:
-		c.cursorY--
-		if c.cursorY < 0 {
-			c.cursorY = c.size - 1
+		z := c.app.Scene().Rotation().Z
+		if z < math32.Pi/float32(2) && z > math32.Pi/float32(-2) {
+			c.cursorY--
+			if c.cursorY < 0 {
+				c.cursorY = c.size - 1
+			}
+		} else if z < math32.Pi && z > -math32.Pi {
+			c.cursorY++
+			if c.cursorY >= c.size {
+				c.cursorY = 0
+			}
 		}
 		c.updateSelected()
 		break
@@ -266,6 +298,13 @@ func (c *CubePlane) updateSelected() {
 
 	// draw hud text
 	c.app.Gui().RemoveAll(false)
+
+	s := fmt.Sprintf("Rad %f", c.app.Scene().Rotation().Z)
+	l2 := gui.NewLabel(s)
+	width2, _ := c.app.Gui().Window().Size()
+	l2.SetPosition(float32(width2)-530, 10)
+	c.app.Gui().Add(l2)
+
 	l1 := gui.NewLabel("oq command: " + c.command)
 	width, _ := c.app.Gui().Window().Size()
 	l1.SetPosition(float32(width)-230, 10)
