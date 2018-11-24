@@ -44,9 +44,9 @@ type CubePlane struct {
 	command string
 	Header  []string
 
-	cursorX      int64
-	cursorY      int64
-	selectedNode *core.Node
+	cursorX  int64
+	cursorY  int64
+	selected *core.Node
 
 	rc *core.Raycaster
 
@@ -74,7 +74,7 @@ func Init(app *application.Application, cmd string) *CubePlane {
 	//axis := graphic.NewAxisHelper(1.5)
 	//app.Scene().Add(axis)
 
-	app.CameraPersp().SetPosition(0, -15, 10)
+	app.CameraPersp().SetPosition(0, -20, 10)
 	app.CameraPersp().LookAt(&math32.Vector3{0, 0, 0})
 
 	// init stuff for hud
@@ -130,7 +130,7 @@ func Init(app *application.Application, cmd string) *CubePlane {
 
 	c.app.SubscribeID(application.OnAfterRender, 1, func(evname string, ev interface{}) {
 		if c.rotate {
-			c.app.Scene().RotateOnAxis(&math32.Vector3{0, 0, 1}, -.03)
+			c.app.Scene().RotateOnAxis(&math32.Vector3{0, 0, 1}, -.003)
 		}
 	})
 
@@ -287,8 +287,8 @@ func (cp *CubePlane) onKey(evname string, ev interface{}) {
 func (cp *CubePlane) updateSelected() {
 
 	// unhighlight previous selection
-	if cp.selectedNode != nil {
-		ig, _ := cp.selectedNode.Children()[0].(graphic.IGraphic)
+	if cp.selected != nil {
+		ig, _ := cp.selected.Children()[0].(graphic.IGraphic)
 		gr := ig.GetGraphic()
 		imat := gr.GetMaterial(0)
 
@@ -301,8 +301,8 @@ func (cp *CubePlane) updateSelected() {
 	}
 
 	// highlight new selection
-	cp.selectedNode = cp.plane[cp.cursorX][cp.cursorY]
-	ig, _ := cp.selectedNode.Children()[0].(graphic.IGraphic)
+	cp.selected = cp.plane[cp.cursorX][cp.cursorY]
+	ig, _ := cp.selected.Children()[0].(graphic.IGraphic)
 	gr := ig.GetGraphic()
 	imat := gr.GetMaterial(0)
 
