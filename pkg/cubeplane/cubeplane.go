@@ -71,8 +71,8 @@ func Init(app *application.Application, cmd string) *CubePlane {
 	app.Scene().Add(pointLight)
 
 	// Add an axis helper to the scene
-	axis := graphic.NewAxisHelper(1.5)
-	app.Scene().Add(axis)
+	//axis := graphic.NewAxisHelper(1.5)
+	//app.Scene().Add(axis)
 
 	app.CameraPersp().SetPosition(0, -15, 10)
 	app.CameraPersp().LookAt(&math32.Vector3{0, 0, 0})
@@ -144,10 +144,10 @@ func Init(app *application.Application, cmd string) *CubePlane {
 	return c
 }
 
-func (c *CubePlane) onMouse(evname string, ev interface{}) {
+func (cp *CubePlane) onMouse(evname string, ev interface{}) {
 	// Convert mouse coordinates to normalized device coordinates
 	mev := ev.(*window.MouseEvent)
-	width, height := c.app.Window().Size()
+	width, height := cp.app.Window().Size()
 	// Linux and Windows
 	//x := 2*(mev.Xpos/float32(width)) - 1
 	//y := -2*(mev.Ypos/float32(height)) + 1
@@ -157,11 +157,11 @@ func (c *CubePlane) onMouse(evname string, ev interface{}) {
 	y := -1*(mev.Ypos/float32(height)) + 1
 
 	// Set the raycaster from the current camera and mouse coordinates
-	_ = c.app.Camera().SetRaycaster(c.rc, x, y)
-	//fmt.Printf("rc:%+v\n", c.rc.Ray)
+	_ = cp.app.Camera().SetRaycaster(cp.rc, x, y)
+	//fmt.Printf("rc:%+v\n", cp.rc.Ray)
 
 	// Checks intersection with all objects in the scene
-	intersects := c.rc.IntersectObjects(c.app.Scene().Children(), true)
+	intersects := cp.rc.IntersectObjects(cp.app.Scene().Children(), true)
 	//fmt.Printf("intersects:%+v\n", intersects)
 	if len(intersects) == 0 {
 		return
@@ -176,119 +176,119 @@ func (c *CubePlane) onMouse(evname string, ev interface{}) {
 	node := ig.GetNode().Parent().GetNode()
 	ud, ok := node.UserData().(CubeData)
 	if ok {
-		c.cursorX = ud.locX
-		c.cursorY = ud.locY
+		cp.cursorX = ud.locX
+		cp.cursorY = ud.locY
 	}
 
-	c.updateSelected()
+	cp.updateSelected()
 }
 
-func (c *CubePlane) onKey(evname string, ev interface{}) {
+func (cp *CubePlane) onKey(evname string, ev interface{}) {
 
 	key := ev.(*window.KeyEvent)
 	switch key.Keycode {
 	case window.KeyLeft:
 	case window.KeyA:
-		z := c.app.Scene().Rotation().Z
-		c.cursorX -= int64(math32.Round(math32.Cos(z)))
-		if c.cursorX > c.size-1 {
-			c.cursorX = c.size - 1
+		z := cp.app.Scene().Rotation().Z
+		cp.cursorX -= int64(math32.Round(math32.Cos(z)))
+		if cp.cursorX > cp.size-1 {
+			cp.cursorX = cp.size - 1
 		}
-		if c.cursorX < 0 {
-			c.cursorX = 0
+		if cp.cursorX < 0 {
+			cp.cursorX = 0
 		}
 
-		c.cursorY += int64(math32.Round(math32.Sin(z)))
-		if c.cursorY < 0 {
-			c.cursorY = 0
+		cp.cursorY += int64(math32.Round(math32.Sin(z)))
+		if cp.cursorY < 0 {
+			cp.cursorY = 0
 		}
-		if c.cursorY > c.size-1 {
-			c.cursorY = c.size - 1
+		if cp.cursorY > cp.size-1 {
+			cp.cursorY = cp.size - 1
 		}
-		c.updateSelected()
+		cp.updateSelected()
 		break
 
 	case window.KeyRight:
 	case window.KeyD:
-		z := c.app.Scene().Rotation().Z
-		c.cursorX += int64(math32.Round(math32.Cos(z)))
-		if c.cursorX > c.size-1 {
-			c.cursorX = c.size - 1
+		z := cp.app.Scene().Rotation().Z
+		cp.cursorX += int64(math32.Round(math32.Cos(z)))
+		if cp.cursorX > cp.size-1 {
+			cp.cursorX = cp.size - 1
 		}
-		if c.cursorX < 0 {
-			c.cursorX = 0
+		if cp.cursorX < 0 {
+			cp.cursorX = 0
 		}
 
-		c.cursorY -= int64(math32.Round(math32.Sin(z)))
-		if c.cursorY < 0 {
-			c.cursorY = 0
+		cp.cursorY -= int64(math32.Round(math32.Sin(z)))
+		if cp.cursorY < 0 {
+			cp.cursorY = 0
 		}
-		if c.cursorY > c.size-1 {
-			c.cursorY = c.size - 1
+		if cp.cursorY > cp.size-1 {
+			cp.cursorY = cp.size - 1
 		}
-		c.updateSelected()
+		cp.updateSelected()
 		break
 
 	case window.KeyUp:
 	case window.KeyW:
-		z := c.app.Scene().Rotation().Z
-		c.cursorX += int64(math32.Round(math32.Sin(z)))
-		if c.cursorX > c.size-1 {
-			c.cursorX = c.size - 1
+		z := cp.app.Scene().Rotation().Z
+		cp.cursorX += int64(math32.Round(math32.Sin(z)))
+		if cp.cursorX > cp.size-1 {
+			cp.cursorX = cp.size - 1
 		}
-		if c.cursorX < 0 {
-			c.cursorX = 0
-		}
-
-		c.cursorY += int64(math32.Round(math32.Cos(z)))
-		if c.cursorY < 0 {
-			c.cursorY = 0
-		}
-		if c.cursorY > c.size-1 {
-			c.cursorY = c.size - 1
+		if cp.cursorX < 0 {
+			cp.cursorX = 0
 		}
 
-		c.updateSelected()
+		cp.cursorY += int64(math32.Round(math32.Cos(z)))
+		if cp.cursorY < 0 {
+			cp.cursorY = 0
+		}
+		if cp.cursorY > cp.size-1 {
+			cp.cursorY = cp.size - 1
+		}
+
+		cp.updateSelected()
 		break
 
 	case window.KeyDown:
 	case window.KeyS:
-		z := c.app.Scene().Rotation().Z
-		c.cursorX -= int64(math32.Round(math32.Sin(z)))
-		if c.cursorX > c.size-1 {
-			c.cursorX = c.size - 1
+		z := cp.app.Scene().Rotation().Z
+		cp.cursorX -= int64(math32.Round(math32.Sin(z)))
+		if cp.cursorX > cp.size-1 {
+			cp.cursorX = cp.size - 1
 		}
-		if c.cursorX < 0 {
-			c.cursorX = 0
+		if cp.cursorX < 0 {
+			cp.cursorX = 0
 		}
 
-		c.cursorY -= int64(math32.Round(math32.Cos(z)))
-		if c.cursorY < 0 {
-			c.cursorY = 0
+		cp.cursorY -= int64(math32.Round(math32.Cos(z)))
+		if cp.cursorY < 0 {
+			cp.cursorY = 0
 		}
-		if c.cursorY > c.size-1 {
-			c.cursorY = c.size - 1
+		if cp.cursorY > cp.size-1 {
+			cp.cursorY = cp.size - 1
 		}
-		c.updateSelected()
+		cp.updateSelected()
 		break
 
 	case window.KeyR:
-		if c.rotate {
-			c.rotate = false
+		if cp.rotate {
+			cp.rotate = false
 		} else {
-			c.rotate = true
+			cp.rotate = true
 		}
 
 	case window.KeyQ:
-		c.app.Quit()
+		cp.app.Quit()
 	}
 }
 
-func (c *CubePlane) updateSelected() {
+func (cp *CubePlane) updateSelected() {
 
 	// unhighlight previous selection
-	if c.selectedNode != nil {
-		ig, _ := c.selectedNode.Children()[0].(graphic.IGraphic)
+	if cp.selectedNode != nil {
+		ig, _ := cp.selectedNode.Children()[0].(graphic.IGraphic)
 		gr := ig.GetGraphic()
 		imat := gr.GetMaterial(0)
 
@@ -301,8 +301,8 @@ func (c *CubePlane) updateSelected() {
 	}
 
 	// highlight new selection
-	c.selectedNode = c.plane[c.cursorX][c.cursorY]
-	ig, _ := c.selectedNode.Children()[0].(graphic.IGraphic)
+	cp.selectedNode = cp.plane[cp.cursorX][cp.cursorY]
+	ig, _ := cp.selectedNode.Children()[0].(graphic.IGraphic)
 	gr := ig.GetGraphic()
 	imat := gr.GetMaterial(0)
 
@@ -314,52 +314,52 @@ func (c *CubePlane) updateSelected() {
 	cubemat.SetEmissiveColor(&math32.Color{0, 1, 0})
 
 	// draw hud text
-	c.app.Gui().RemoveAll(false)
-	l1 := gui.NewLabel("oq command: " + c.command)
-	width, _ := c.app.Gui().Window().Size()
+	cp.app.Gui().RemoveAll(false)
+	l1 := gui.NewLabel("oq command: " + cp.command)
+	width, _ := cp.app.Gui().Window().Size()
 	l1.SetPosition(float32(width)-230, 10)
 	l1.SetPaddings(2, 2, 2, 2)
 	l1.SetFontSize(12.0)
-	c.app.Gui().Add(l1)
+	cp.app.Gui().Add(l1)
 
-	node := c.plane[c.cursorX][c.cursorY]
+	node := cp.plane[cp.cursorX][cp.cursorY]
 	d := node.UserData().(CubeData)
 	if d.attrs != nil {
-		for i := range c.Header {
+		for i := range cp.Header {
 			basename := path.Base(d.attrs[i]) // everything gets basenamed
-			selected := fmt.Sprintf("%v %v", c.Header[i], basename)
+			selected := fmt.Sprintf("%v %v", cp.Header[i], basename)
 			attrs := gui.NewLabel(selected)
 			attrs.SetPosition(float32(width)-230, 50.0+(float32(i)*15.0))
 			attrs.SetPaddings(2, 2, 2, 2)
-			c.app.Gui().Add(attrs)
+			cp.app.Gui().Add(attrs)
 		}
 	}
 }
 
-func (c *CubePlane) Update(id string, attrs []string) {
+func (cp *CubePlane) Update(id string, attrs []string) {
 
 	// try to position id's on plane in a predictable order
 	x, _ := strconv.ParseInt(id, 10, 64)
 	y := x
 
-	x %= c.size - 1
-	y %= c.size - 1
+	x %= cp.size - 1
+	y %= cp.size - 1
 
-	for j := range c.plane[0][y:] {
-		for i := range c.plane[x:][j] {
-			node := c.plane[i][j]
+	for j := range cp.plane[0][y:] {
+		for i := range cp.plane[x:][j] {
+			node := cp.plane[i][j]
 			if node.Name() == "" || node.Name() == id {
 				d := CubeData{attrs: attrs, locX: int64(i), locY: int64(j)}
 				node.SetUserData(d)
 				node.SetName(id)
-				c.updateNodeGfx(node)
+				cp.updateNodeGfx(node)
 				return
 			}
 		}
 	}
 }
 
-func (c CubePlane) updateNodeGfx(node *core.Node) {
+func (cp CubePlane) updateNodeGfx(node *core.Node) {
 
 	type meshI interface {
 		EmissiveColor() math32.Color
@@ -374,12 +374,12 @@ func (c CubePlane) updateNodeGfx(node *core.Node) {
 	imesh.SetEmissiveColor(&math32.Color{float32(cpu), 0, 0})
 }
 
-func (c *CubePlane) initCubePlane(size int64) {
+func (cp *CubePlane) initCubePlane(size int64) {
 
 	// allocate matrix
-	c.plane = make([][]*core.Node, size)
+	cp.plane = make([][]*core.Node, size)
 	for x := int64(0); x < size; x++ {
-		c.plane[x] = make([]*core.Node, size)
+		cp.plane[x] = make([]*core.Node, size)
 	}
 
 	// create nodes
@@ -398,8 +398,8 @@ func (c *CubePlane) initCubePlane(size int64) {
 			d := CubeData{locX: x, locY: y}
 			node.SetUserData(d)
 			node.Add(mesh)
-			c.app.Scene().Add(node)
-			c.plane[x][y] = node
+			cp.app.Scene().Add(node)
+			cp.plane[x][y] = node
 		}
 	}
 }
