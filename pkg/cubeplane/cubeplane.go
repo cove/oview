@@ -298,13 +298,6 @@ func (c *CubePlane) updateSelected() {
 
 	// draw hud text
 	c.app.Gui().RemoveAll(false)
-
-	s := fmt.Sprintf("Rad %f", c.app.Scene().Rotation().Z)
-	l2 := gui.NewLabel(s)
-	width2, _ := c.app.Gui().Window().Size()
-	l2.SetPosition(float32(width2)-530, 10)
-	c.app.Gui().Add(l2)
-
 	l1 := gui.NewLabel("oq command: " + c.command)
 	width, _ := c.app.Gui().Window().Size()
 	l1.SetPosition(float32(width)-230, 10)
