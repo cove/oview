@@ -190,16 +190,20 @@ func (c *CubePlane) onKey(evname string, ev interface{}) {
 	case window.KeyLeft:
 	case window.KeyA:
 		z := c.app.Scene().Rotation().Z
-		if z < math32.Pi/float32(2) && z > math32.Pi/float32(-2) {
-			c.cursorX--
-			if c.cursorX < 0 {
-				c.cursorX = c.size - 1
-			}
-		} else if z < math32.Pi && z > -math32.Pi {
-			c.cursorX++
-			if c.cursorX >= c.size {
-				c.cursorX = 0
-			}
+		c.cursorY += int64(math32.Round(math32.Sin(z)))
+		if c.cursorY < 0 {
+			c.cursorY = c.size - 1
+		}
+		if c.cursorY >= c.size {
+			c.cursorY = 0
+		}
+
+		c.cursorX -= int64(math32.Round(math32.Cos(z)))
+		if c.cursorX >= c.size {
+			c.cursorX = 0
+		}
+		if c.cursorX < 0 {
+			c.cursorX = c.size - 1
 		}
 		c.updateSelected()
 		break
@@ -207,16 +211,20 @@ func (c *CubePlane) onKey(evname string, ev interface{}) {
 	case window.KeyRight:
 	case window.KeyD:
 		z := c.app.Scene().Rotation().Z
-		if z < math32.Pi/float32(2) && z > math32.Pi/float32(-2) {
-			c.cursorX++
-			if c.cursorX >= c.size {
-				c.cursorX = 0
-			}
-		} else if z < math32.Pi && z > -math32.Pi {
-			c.cursorX--
-			if c.cursorX < 0 {
-				c.cursorX = c.size - 1
-			}
+		c.cursorX += int64(math32.Round(math32.Cos(z)))
+		if c.cursorX >= c.size {
+			c.cursorX = 0
+		}
+		if c.cursorX < 0 {
+			c.cursorX = c.size - 1
+		}
+
+		c.cursorY -= int64(math32.Round(math32.Sin(z)))
+		if c.cursorY < 0 {
+			c.cursorY = c.size - 1
+		}
+		if c.cursorY >= c.size {
+			c.cursorY = 0
 		}
 		c.updateSelected()
 		break
@@ -224,16 +232,20 @@ func (c *CubePlane) onKey(evname string, ev interface{}) {
 	case window.KeyUp:
 	case window.KeyW:
 		z := c.app.Scene().Rotation().Z
-		if z < math32.Pi/float32(2) && z > math32.Pi/float32(-2) {
-			c.cursorY++
-			if c.cursorY >= c.size {
-				c.cursorY = 0
-			}
-		} else if z < math32.Pi && z > -math32.Pi {
-			c.cursorY--
-			if c.cursorY < 0 {
-				c.cursorY = c.size - 1
-			}
+		c.cursorY += int64(math32.Round(math32.Cos(z)))
+		if c.cursorY < 0 {
+			c.cursorY = c.size - 1
+		}
+		if c.cursorY >= c.size {
+			c.cursorY = 0
+		}
+
+		c.cursorX += int64(math32.Round(math32.Sin(z)))
+		if c.cursorX >= c.size {
+			c.cursorX = 0
+		}
+		if c.cursorX < 0 {
+			c.cursorX = c.size - 1
 		}
 		c.updateSelected()
 		break
@@ -241,16 +253,20 @@ func (c *CubePlane) onKey(evname string, ev interface{}) {
 	case window.KeyDown:
 	case window.KeyS:
 		z := c.app.Scene().Rotation().Z
-		if z < math32.Pi/float32(2) && z > math32.Pi/float32(-2) {
-			c.cursorY--
-			if c.cursorY < 0 {
-				c.cursorY = c.size - 1
-			}
-		} else if z < math32.Pi && z > -math32.Pi {
-			c.cursorY++
-			if c.cursorY >= c.size {
-				c.cursorY = 0
-			}
+		c.cursorY -= int64(math32.Round(math32.Cos(z)))
+		if c.cursorY < 0 {
+			c.cursorY = c.size - 1
+		}
+		if c.cursorY >= c.size {
+			c.cursorY = 0
+		}
+
+		c.cursorX -= int64(math32.Round(math32.Sin(z)))
+		if c.cursorX >= c.size {
+			c.cursorX = 0
+		}
+		if c.cursorX < 0 {
+			c.cursorX = c.size - 1
 		}
 		c.updateSelected()
 		break
