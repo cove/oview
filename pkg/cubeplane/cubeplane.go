@@ -118,6 +118,7 @@ func Init(app *application.Application, cmd string) *CubePlane {
 		app:     app,
 		size:    size,
 		command: cmd,
+		rotate:  true,
 	}
 
 	app.Window().Subscribe(window.OnKeyDown, func(evname string, ev interface{}) {
@@ -188,6 +189,7 @@ func (cp *CubePlane) onKey(evname string, ev interface{}) {
 	key := ev.(*window.KeyEvent)
 	switch key.Keycode {
 	case window.KeyLeft:
+		fallthrough
 	case window.KeyA:
 		z := cp.app.Scene().Rotation().Z
 		cp.cursorX -= int64(math32.Round(math32.Cos(z)))
@@ -206,9 +208,7 @@ func (cp *CubePlane) onKey(evname string, ev interface{}) {
 			cp.cursorY = cp.size - 1
 		}
 		cp.updateSelected()
-		break
 
-	case window.KeyRight:
 	case window.KeyD:
 		z := cp.app.Scene().Rotation().Z
 		cp.cursorX += int64(math32.Round(math32.Cos(z)))
@@ -227,9 +227,9 @@ func (cp *CubePlane) onKey(evname string, ev interface{}) {
 			cp.cursorY = cp.size - 1
 		}
 		cp.updateSelected()
-		break
 
 	case window.KeyUp:
+		fallthrough
 	case window.KeyW:
 		z := cp.app.Scene().Rotation().Z
 		cp.cursorX += int64(math32.Round(math32.Sin(z)))
@@ -252,6 +252,7 @@ func (cp *CubePlane) onKey(evname string, ev interface{}) {
 		break
 
 	case window.KeyDown:
+		fallthrough
 	case window.KeyS:
 		z := cp.app.Scene().Rotation().Z
 		cp.cursorX -= int64(math32.Round(math32.Sin(z)))
@@ -273,12 +274,7 @@ func (cp *CubePlane) onKey(evname string, ev interface{}) {
 		break
 
 	case window.KeyR:
-		if cp.rotate {
-			cp.rotate = false
-		} else {
-			cp.rotate = true
-		}
-
+		cp.rotate = !cp.rotate
 	case window.KeyQ:
 		cp.app.Quit()
 	}
@@ -359,7 +355,7 @@ func (cp *CubePlane) Update(id string, attrs []string) {
 	}
 }
 
-func (cp CubePlane) updateNodeGfx(node *core.Node) {
+func (cp *CubePlane) updateNodeGfx(node *core.Node) {
 
 	type meshI interface {
 		EmissiveColor() math32.Color
@@ -372,6 +368,8 @@ func (cp CubePlane) updateNodeGfx(node *core.Node) {
 
 	cpu, _ := strconv.ParseFloat(ud.attrs[2], 64)
 	imesh.SetEmissiveColor(&math32.Color{float32(cpu), 0, 0})
+	gr.SetMatrix(math32.NewMatrix4().MakeTranslation(0, 0, (float32(cpu)+.5)/4))
+	gr.SetScaleZ(float32(cpu) + .5)
 }
 
 func (cp *CubePlane) initCubePlane(size int64) {
@@ -386,7 +384,7 @@ func (cp *CubePlane) initCubePlane(size int64) {
 	for y := int64(0); y < size; y++ {
 		for x := int64(0); x < size; x++ {
 			node := core.NewNode()
-			cube := geometry.NewCube(.5)
+			cube := geometry.NewBox(.5, .5, .5)
 			mat := material.NewPhong(math32.NewColorHex(0x002b36))
 			mesh := graphic.NewMesh(cube, mat)
 
