@@ -19,6 +19,8 @@ import (
 	"path"
 	"strconv"
 
+	"github.com/cove/oq/pkg/colors"
+
 	"github.com/g3n/engine/core"
 
 	"github.com/g3n/engine/renderer"
@@ -66,8 +68,8 @@ func Init(app *application.Application, cmd string) *CubePlane {
 	// Add lights to the scene
 	ambientLight := light.NewAmbient(&math32.Color{1.0, 1.0, 1.0}, 0.8)
 	app.Scene().Add(ambientLight)
-	pointLight := light.NewPoint(&math32.Color{1, 1, 1}, 5.0)
-	pointLight.SetPosition(1, 0, 2)
+	pointLight := light.NewPoint(&math32.Color{1, 1, 1}, 10.0)
+	pointLight.SetPosition(1, 0, 10)
 	app.Scene().Add(pointLight)
 
 	// Add an axis helper to the scene
@@ -107,7 +109,9 @@ func Init(app *application.Application, cmd string) *CubePlane {
 	app.SetGui(root)
 
 	// Sets window background color
-	gs.ClearColor(0.0394, 0.1601, 0.1983, 1.0)
+	//gs.ClearColor(0.0394, 0.1601, 0.1983, 1.0)
+	c := colors.Solaried("base02")
+	gs.ClearColor(c.R, c.G, c.B, 1.0)
 
 	app.TimerManager.Initialize()
 
@@ -361,6 +365,7 @@ func (cp *CubePlane) updateNodeGfx(node *core.Node) {
 	type meshI interface {
 		EmissiveColor() math32.Color
 		SetEmissiveColor(*math32.Color)
+		SetColor(color *math32.Color)
 	}
 
 	ig := node.Children()[0].(graphic.IGraphic)
@@ -369,7 +374,7 @@ func (cp *CubePlane) updateNodeGfx(node *core.Node) {
 	ud := node.UserData().(CubeData)
 
 	cpu, _ := strconv.ParseFloat(ud.attrs[2], 64)
-	imesh.SetEmissiveColor(&math32.Color{float32(cpu), 0, 0})
+	imesh.SetColor(colors.Solaried("violet"))
 	if float32(cpu) >= .5 {
 		gr.SetMatrix(math32.NewMatrix4().MakeTranslation(0, 0, float32(cpu)/4))
 		gr.SetScaleZ(float32(cpu))
@@ -389,7 +394,7 @@ func (cp *CubePlane) initCubePlane(size int64) {
 		for x := int64(0); x < size; x++ {
 			node := core.NewNode()
 			cube := geometry.NewCube(.5)
-			mat := material.NewPhong(math32.NewColorHex(0x657b83))
+			mat := material.NewPhong(colors.Solaried("base1"))
 			mesh := graphic.NewMesh(cube, mat)
 
 			// XXX: pre-scale cubes so when they're scaled they all line up
