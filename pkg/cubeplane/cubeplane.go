@@ -20,6 +20,8 @@ import (
 	"runtime"
 	"strconv"
 
+	"github.com/g3n/engine/camera/control"
+
 	"github.com/cove/oq/pkg/colors"
 
 	"github.com/g3n/engine/core"
@@ -102,6 +104,12 @@ func Init(app *application.Application, cmd string) *CubePlane {
 		panic(err)
 	}
 	app.SetGui(root)
+
+	// Only use the mouse for orbital controls, since the arrow keys are used to cursor to cubes
+	app.Orbit().Dispose()
+	ob := control.NewOrbitControl(app.Camera(), app.Window())
+	ob.EnableKeys = false
+	app.SetOrbit(ob)
 
 	// Create cube plane with defaults
 	cp := &CubePlane{
@@ -215,6 +223,8 @@ func (cp *CubePlane) onKey(evname string, ev interface{}) {
 		}
 		cp.updateSelected()
 
+	case window.KeyRight:
+		fallthrough
 	case window.KeyD:
 		z := cp.app.Scene().Rotation().Z
 		cp.cursorX += int64(math32.Round(math32.Cos(z)))
@@ -281,6 +291,7 @@ func (cp *CubePlane) onKey(evname string, ev interface{}) {
 
 	case window.KeyR:
 		cp.rotate = !cp.rotate
+
 	case window.KeyQ:
 		cp.app.Quit()
 	}
