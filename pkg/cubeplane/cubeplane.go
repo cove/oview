@@ -17,6 +17,7 @@ package cubeplane
 import (
 	"fmt"
 	"path"
+	"runtime"
 	"strconv"
 
 	"github.com/cove/oq/pkg/colors"
@@ -40,21 +41,27 @@ import (
 )
 
 type CubePlane struct {
-	app  *application.Application
-	size int64
+	app *application.Application
 
+	plane              [][]*core.Node
+	size               int64
+	secondsPerRotation float32
+
+	cubeSize          float32
+	cubeInactiveColor *math32.Color
+	cubeActiveColor   *math32.Color
+
+	cursorX       int64
+	cursorY       int64
+	selected      *core.Node
+	selectedColor *math32.Color
+
+	backgroundColor *math32.Color
+
+	rc      *core.Raycaster
 	command string
 	Header  []string
-
-	cursorX  int64
-	cursorY  int64
-	selected *core.Node
-
-	rc *core.Raycaster
-
-	plane [][]*core.Node
-
-	rotate bool
+	rotate  bool
 }
 
 type CubeData struct {
@@ -76,29 +83,17 @@ func Init(app *application.Application, cmd string) *CubePlane {
 	//axis := graphic.NewAxisHelper(1.5)
 	//app.Scene().Add(axis)
 
+	// Position the camera to look at center of board at an angle
 	app.CameraPersp().SetPosition(0, -20, 10)
 	app.CameraPersp().LookAt(&math32.Vector3{0, 0, 0})
 
-	// init stuff for hud
+	// Init for hud
 	gs, err := gls.New()
 	if err != nil {
 		panic(err)
 	}
 	gui.NewRoot(gs, app.Window())
 	root := gui.NewRoot(gs, app.Window())
-
-	l1 := gui.NewLabel("oq command: " + cmd)
-	width, _ := app.Window().Size()
-	l1.SetPosition(float32(width)-230, 10)
-	l1.SetPaddings(2, 2, 2, 2)
-	l1.SetFontSize(12.0)
-	root.Add(l1)
-
-	// why doesn't this resize adjust the text location?
-	root.Subscribe(window.OnWindowSize, func(evname string, ev interface{}) {
-		width, _ := app.Window().Size()
-		l1.SetPosition(float32(width)-130, 10)
-	})
 
 	// Creates a renderer and adds default shaders
 	rend := renderer.NewRenderer(gs)
@@ -108,62 +103,66 @@ func Init(app *application.Application, cmd string) *CubePlane {
 	}
 	app.SetGui(root)
 
-	// Sets window background color
-	//gs.ClearColor(0.0394, 0.1601, 0.1983, 1.0)
-	c := colors.Solaried("base02")
-	gs.ClearColor(c.R, c.G, c.B, 1.0)
-
-	app.TimerManager.Initialize()
-
-	// default plane size
-	size := int64(20)
-
+	// Create cube plane with defaults
 	cp := &CubePlane{
-		app:     app,
-		size:    size,
-		command: cmd,
-		rotate:  true,
+		app:                app,
+		size:               int64(20),
+		secondsPerRotation: float32(30),
+		cubeSize:           float32(.5),
+		cubeInactiveColor:  colors.Solaried("base1"),
+		cubeActiveColor:    colors.Solaried("violet"),
+		backgroundColor:    colors.Solaried("base03"),
+		selectedColor:      colors.Solaried("cyan"),
+		command:            cmd,
+		rc:                 core.NewRaycaster(&math32.Vector3{}, &math32.Vector3{}),
+		rotate:             true,
 	}
 
+	// Sets window background color
+	c := cp.backgroundColor
+	gs.ClearColor(c.R, c.G, c.B, 1.0)
+
+	// Init event handling
+	app.TimerManager.Initialize()
 	app.Window().Subscribe(window.OnKeyDown, func(evname string, ev interface{}) {
 		cp.onKey(evname, ev)
 	})
-
 	app.Window().Subscribe(window.OnKeyRepeat, func(evname string, ev interface{}) {
 		cp.onKey(evname, ev)
 	})
-
 	cp.app.SubscribeID(application.OnAfterRender, 1, func(evname string, ev interface{}) {
 		if cp.rotate {
 			cp.app.Scene().RotateOnAxis(&math32.Vector3{0, 0, 1},
-				app.FrameDeltaSeconds()*-2*math32.Pi/32)
+				app.FrameDeltaSeconds()*-2*math32.Pi/cp.secondsPerRotation)
 		}
 	})
-
-	cp.rc = core.NewRaycaster(&math32.Vector3{}, &math32.Vector3{})
 	app.Window().Subscribe(window.OnMouseDown, func(evname string, ev interface{}) {
 		cp.onMouse(evname, ev)
 	})
 
-	cp.initCubePlane(size)
+	cp.initCubePlane()
 
 	return cp
 }
 
 func (cp *CubePlane) onMouse(evname string, ev interface{}) {
+
 	// Convert mouse coordinates to normalized device coordinates
 	mev := ev.(*window.MouseEvent)
 	width, height := cp.app.Window().Size()
-	// Linux and Windows
-	//x := 2*(mev.Xpos/float32(width)) - 1
-	//y := -2*(mev.Ypos/float32(height)) + 1
-
-	// OSX
-	x := 1*(mev.Xpos/float32(width)) - 1
-	y := -1*(mev.Ypos/float32(height)) + 1
+	var x, y float32
+	if runtime.GOOS == "darwin" {
+		// OSX, not sure why it's different than Windows and Linux
+		x = 1*(mev.Xpos/float32(width)) - 1
+		y = -1*(mev.Ypos/float32(height)) + 1
+	} else {
+		// Linux and Windows
+		x = 2*(mev.Xpos/float32(width)) - 1
+		y = -2*(mev.Ypos/float32(height)) + 1
+	}
 
 	// Set the raycaster from the current camera and mouse coordinates
-	_ = cp.app.Camera().SetRaycaster(cp.rc, x, y)
+	cp.app.Camera().SetRaycaster(cp.rc, x, y)
 	//fmt.Printf("rc:%+v\n", cp.rc.Ray)
 
 	// Checks intersection with all objects in the scene
@@ -173,12 +172,14 @@ func (cp *CubePlane) onMouse(evname string, ev interface{}) {
 		return
 	}
 
+	// Get the first object we intersected with
 	obj := intersects[0].Object
 	ig, ok := obj.(graphic.IGraphic)
 	if !ok {
 		return
 	}
 
+	// Save the x y coordinate on the node so we can identify it later after a raycast
 	node := ig.GetNode().Parent().GetNode()
 	ud, ok := node.UserData().(CubeData)
 	if ok {
@@ -287,34 +288,34 @@ func (cp *CubePlane) onKey(evname string, ev interface{}) {
 
 func (cp *CubePlane) updateSelected() {
 
-	// unhighlight previous selection
+	type matI interface {
+		EmissiveColor() math32.Color
+		SetEmissiveColor(*math32.Color)
+	}
+
+	// Un-highlight previous selection
 	if cp.selected != nil {
 		ig, _ := cp.selected.Children()[0].(graphic.IGraphic)
 		gr := ig.GetGraphic()
 		imat := gr.GetMaterial(0)
-
-		type matI interface {
-			EmissiveColor() math32.Color
-			SetEmissiveColor(*math32.Color)
-		}
 		cubemat := imat.(matI)
 		cubemat.SetEmissiveColor(&math32.Color{0, 0, 0})
 	}
 
-	// highlight new selection
+	// Highlight new selection
 	cp.selected = cp.plane[cp.cursorX][cp.cursorY]
 	ig, _ := cp.selected.Children()[0].(graphic.IGraphic)
 	gr := ig.GetGraphic()
 	imat := gr.GetMaterial(0)
 
-	type matI interface {
-		EmissiveColor() math32.Color
-		SetEmissiveColor(*math32.Color)
-	}
 	cubemat := imat.(matI)
-	cubemat.SetEmissiveColor(&math32.Color{0, 1, 0})
+	cubemat.SetEmissiveColor(cp.selectedColor)
 
-	// draw hud text
+	cp.updateHud()
+}
+
+func (cp *CubePlane) updateHud() {
+
 	cp.app.Gui().RemoveAll(false)
 	l1 := gui.NewLabel("oq command: " + cp.command)
 	width, _ := cp.app.Gui().Window().Size()
@@ -339,7 +340,7 @@ func (cp *CubePlane) updateSelected() {
 
 func (cp *CubePlane) Update(id string, attrs []string) {
 
-	// try to position id's on plane in a predictable order
+	// Try to position ID's on plane in a predictable order
 	x, _ := strconv.ParseInt(id, 10, 64)
 	y := x
 
@@ -353,14 +354,14 @@ func (cp *CubePlane) Update(id string, attrs []string) {
 				d := CubeData{attrs: attrs, locX: int64(i), locY: int64(j)}
 				node.SetUserData(d)
 				node.SetName(id)
-				cp.updateNodeGfx(node)
+				cp.updateCubeStatus(node)
 				return
 			}
 		}
 	}
 }
 
-func (cp *CubePlane) updateNodeGfx(node *core.Node) {
+func (cp *CubePlane) updateCubeStatus(node *core.Node) {
 
 	type meshI interface {
 		EmissiveColor() math32.Color
@@ -373,38 +374,41 @@ func (cp *CubePlane) updateNodeGfx(node *core.Node) {
 	imesh := gr.GetMaterial(0).(meshI)
 	ud := node.UserData().(CubeData)
 
+	imesh.SetColor(cp.cubeActiveColor)
+
 	cpu, _ := strconv.ParseFloat(ud.attrs[2], 64)
-	imesh.SetColor(colors.Solaried("violet"))
+	cpu /= 10
+
 	if float32(cpu) >= .5 {
 		gr.SetMatrix(math32.NewMatrix4().MakeTranslation(0, 0, float32(cpu)/4))
 		gr.SetScaleZ(float32(cpu))
 	}
 }
 
-func (cp *CubePlane) initCubePlane(size int64) {
+func (cp *CubePlane) initCubePlane() {
 
 	// allocate matrix
-	cp.plane = make([][]*core.Node, size)
-	for x := int64(0); x < size; x++ {
-		cp.plane[x] = make([]*core.Node, size)
+	cp.plane = make([][]*core.Node, cp.size)
+	for x := int64(0); x < cp.size; x++ {
+		cp.plane[x] = make([]*core.Node, cp.size)
 	}
 
-	// create nodes
-	for y := int64(0); y < size; y++ {
-		for x := int64(0); x < size; x++ {
+	// Create nodes
+	for y := int64(0); y < cp.size; y++ {
+		for x := int64(0); x < cp.size; x++ {
 			node := core.NewNode()
-			cube := geometry.NewCube(.5)
-			mat := material.NewPhong(colors.Solaried("base1"))
+			cube := geometry.NewCube(cp.cubeSize)
+			mat := material.NewPhong(cp.cubeInactiveColor)
 			mesh := graphic.NewMesh(cube, mat)
 
 			// XXX: pre-scale cubes so when they're scaled they all line up
-			mesh.SetMatrix(math32.NewMatrix4().MakeTranslation(0, 0, float32(.5)/4))
-			mesh.SetScaleZ(float32(.5))
+			mesh.SetMatrix(math32.NewMatrix4().MakeTranslation(0, 0, cp.cubeSize/4))
+			mesh.SetScaleZ(cp.cubeSize)
 
-			// shift cube positions so that rotational axis is in the center,
+			// Shift cube positions so that rotational axis is in the center,
 			// while keeping simpler zero based grid coordinates
-			posX := float32(x) - (float32(size) / 2)
-			posY := float32(y) - (float32(size) / 2)
+			posX := float32(x) - (float32(cp.size) / 2)
+			posY := float32(y) - (float32(cp.size) / 2)
 			node.SetPosition(posX, posY, 0.0)
 			d := CubeData{locX: x, locY: y}
 			node.SetUserData(d)

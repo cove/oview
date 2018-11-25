@@ -28,13 +28,13 @@ var cfgFile string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "oq",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Displays a text table as a 3D rotating plane of cubes as a heat map",
+	Long: `Takes a text table and displays it as a 3D rotating plane of cubes,
+where the size of the cube grows and shrinks based on the values
+associated with the cube along with a heat map. This allows one to
+see a large table that may not otherwise fit on the screen and quickly
+see the changes in it as it changes over time.
+`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	//Run: cmdView,
@@ -51,15 +51,7 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.oq.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
 // initConfig reads in config file and ENV variables if set.
