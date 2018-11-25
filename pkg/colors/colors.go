@@ -39,7 +39,12 @@ var solarized = map[string]math32.Color{
 	"green":   {0.4498, 0.5412, 0.0202},
 }
 
-func Solaried(name string) *math32.Color {
+func Solarized(name string) *math32.Color {
 	c := solarized[strings.ToLower(name)]
 	return &c
+}
+func Solarized4(name string, alpha float32) *math32.Color4 {
+	c := solarized[strings.ToLower(name)]
+	c4 := &math32.Color4{c.R, c.B, c.G, alpha}
+	return c4
 }
