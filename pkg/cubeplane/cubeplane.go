@@ -114,7 +114,7 @@ func Init(app *application.Application, cmd string) *CubePlane {
 	// default plane size
 	size := int64(20)
 
-	c := &CubePlane{
+	cp := &CubePlane{
 		app:     app,
 		size:    size,
 		command: cmd,
@@ -122,27 +122,28 @@ func Init(app *application.Application, cmd string) *CubePlane {
 	}
 
 	app.Window().Subscribe(window.OnKeyDown, func(evname string, ev interface{}) {
-		c.onKey(evname, ev)
+		cp.onKey(evname, ev)
 	})
 
 	app.Window().Subscribe(window.OnKeyRepeat, func(evname string, ev interface{}) {
-		c.onKey(evname, ev)
+		cp.onKey(evname, ev)
 	})
 
-	c.app.SubscribeID(application.OnAfterRender, 1, func(evname string, ev interface{}) {
-		if c.rotate {
-			c.app.Scene().RotateOnAxis(&math32.Vector3{0, 0, 1}, -.003)
+	cp.app.SubscribeID(application.OnAfterRender, 1, func(evname string, ev interface{}) {
+		if cp.rotate {
+			cp.app.Scene().RotateOnAxis(&math32.Vector3{0, 0, 1},
+				app.FrameDeltaSeconds()*-2*math32.Pi/32)
 		}
 	})
 
-	c.rc = core.NewRaycaster(&math32.Vector3{}, &math32.Vector3{})
+	cp.rc = core.NewRaycaster(&math32.Vector3{}, &math32.Vector3{})
 	app.Window().Subscribe(window.OnMouseDown, func(evname string, ev interface{}) {
-		c.onMouse(evname, ev)
+		cp.onMouse(evname, ev)
 	})
 
-	c.initCubePlane(size)
+	cp.initCubePlane(size)
 
-	return c
+	return cp
 }
 
 func (cp *CubePlane) onMouse(evname string, ev interface{}) {
