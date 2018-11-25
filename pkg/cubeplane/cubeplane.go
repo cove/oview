@@ -362,6 +362,7 @@ func (cp *CubePlane) updateNodeGfx(node *core.Node) {
 		EmissiveColor() math32.Color
 		SetEmissiveColor(*math32.Color)
 	}
+
 	ig := node.Children()[0].(graphic.IGraphic)
 	gr := ig.GetGraphic()
 	imesh := gr.GetMaterial(0).(meshI)
@@ -369,8 +370,10 @@ func (cp *CubePlane) updateNodeGfx(node *core.Node) {
 
 	cpu, _ := strconv.ParseFloat(ud.attrs[2], 64)
 	imesh.SetEmissiveColor(&math32.Color{float32(cpu), 0, 0})
-	gr.SetMatrix(math32.NewMatrix4().MakeTranslation(0, 0, (float32(cpu)+.5)/4))
-	gr.SetScaleZ(float32(cpu) + .5)
+	if float32(cpu) >= .5 {
+		gr.SetMatrix(math32.NewMatrix4().MakeTranslation(0, 0, float32(cpu)/4))
+		gr.SetScaleZ(float32(cpu))
+	}
 }
 
 func (cp *CubePlane) initCubePlane(size int64) {
@@ -385,9 +388,13 @@ func (cp *CubePlane) initCubePlane(size int64) {
 	for y := int64(0); y < size; y++ {
 		for x := int64(0); x < size; x++ {
 			node := core.NewNode()
-			cube := geometry.NewBox(.5, .5, .5)
-			mat := material.NewPhong(math32.NewColorHex(0x002b36))
+			cube := geometry.NewCube(.5)
+			mat := material.NewPhong(math32.NewColorHex(0x657b83))
 			mesh := graphic.NewMesh(cube, mat)
+
+			// XXX: pre-scale cubes so when they're scaled they all line up
+			mesh.SetMatrix(math32.NewMatrix4().MakeTranslation(0, 0, float32(.5)/4))
+			mesh.SetScaleZ(float32(.5))
 
 			// shift cube positions so that rotational axis is in the center,
 			// while keeping simpler zero based grid coordinates
