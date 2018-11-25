@@ -20,6 +20,8 @@ import (
 	"runtime"
 	"strconv"
 
+	"github.com/g3n/engine/text"
+
 	"github.com/g3n/engine/camera/control"
 
 	"github.com/cove/oq/pkg/colors"
@@ -59,6 +61,9 @@ type CubePlane struct {
 	selectedColor *math32.Color
 
 	backgroundColor *math32.Color
+
+	hudTextSize  float64
+	hudTextColor *math32.Color
 
 	rc      *core.Raycaster
 	command string
@@ -121,6 +126,8 @@ func Init(app *application.Application, cmd string) *CubePlane {
 		cubeActiveColor:    colors.Solaried("violet"),
 		backgroundColor:    colors.Solaried("base03"),
 		selectedColor:      colors.Solaried("cyan"),
+		hudTextSize:        float64(12.0),
+		hudTextColor:       colors.Solaried("base0"),
 		command:            cmd,
 		rc:                 core.NewRaycaster(&math32.Vector3{}, &math32.Vector3{}),
 		rotate:             true,
@@ -328,23 +335,51 @@ func (cp *CubePlane) updateSelected() {
 func (cp *CubePlane) updateHud() {
 
 	cp.app.Gui().RemoveAll(false)
-	l1 := gui.NewLabel("oq command: " + cp.command)
-	width, _ := cp.app.Gui().Window().Size()
-	l1.SetPosition(float32(width)-230, 10)
-	l1.SetPaddings(2, 2, 2, 2)
-	l1.SetFontSize(12.0)
-	cp.app.Gui().Add(l1)
+	//	width, _ := cp.app.Gui().Window().Size()
+
+	font, err := text.NewFont("/Users/cove/go/src/github.com/cove/oq/fonts/Orbitron/Orbitron-Regular.ttf")
+	//font, err := text.NewFont("/Users/cove/go/src/github.com/cove/oq/fonts/spacemono/SpaceMono-Regular.ttf")
+	if err != nil {
+		panic(err.Error())
+	}
+	font.SetLineSpacing(1.0)
+	font.SetPointSize(cp.hudTextSize)
+	font.SetDPI(72)
+	font.SetFgColor(&math32.Color4{0, 0, 1, 1})
+	font.SetBgColor(&math32.Color4{1, 1, 0, 0.8})
 
 	node := cp.plane[cp.cursorX][cp.cursorY]
 	d := node.UserData().(CubeData)
 	if d.attrs != nil {
 		for i := range cp.Header {
 			basename := path.Base(d.attrs[i]) // everything gets basenamed
-			selected := fmt.Sprintf("%v %v", cp.Header[i], basename)
-			attrs := gui.NewLabel(selected)
-			attrs.SetPosition(float32(width)-230, 50.0+(float32(i)*15.0))
-			attrs.SetPaddings(2, 2, 2, 2)
+
+			lineSpace := float32(10.0)
+			b2 := gui.NewButton(cp.Header[i])
+			b2.SetPosition(20, 20.0+(float32(i)*(float32(cp.hudTextSize)+lineSpace)))
+			b2.Label.SetFont(font)
+			b2.SetBordersColor4(&math32.Color4{0, 0, 0, 0})
+			b2.SetColor4(&math32.Color4{0, 0, 0, 0})
+
+			fg := colors.Solaried("cyan")
+			s := gui.ButtonStyle{FgColor: math32.Color4{fg.R, fg.G, fg.B, 1}}
+			fo := colors.Solaried("green")
+			n := gui.ButtonStyle{FgColor: math32.Color4{fo.R, fo.G, fo.B, 1}}
+
+			b2.SetStyles(&gui.ButtonStyles{Over: s, Normal: n})
+
+			b2.Subscribe(gui.OnClick, func(evname string, ev interface{}) {
+				fmt.Printf("button %v OnClick\n", cp.Header[i])
+			})
+			cp.app.Gui().Add(b2)
+
+			attrs := gui.NewLabel(basename)
+			attrs.SetPosition(120, 20.0+(float32(i)*(float32(cp.hudTextSize)+lineSpace)))
+			attrs.SetPaddings(5, 2, 5, 2)
+			attrs.SetColor(cp.hudTextColor)
+			attrs.SetFont(font)
 			cp.app.Gui().Add(attrs)
+
 		}
 	}
 }
