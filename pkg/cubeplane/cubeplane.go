@@ -53,6 +53,7 @@ type CubePlane struct {
 	plane              [][]*core.Node
 	size               int64
 	secondsPerRotation float32
+	ttl                int64
 
 	cubeSize          float32
 	cubeInactiveColor *math32.Color
@@ -77,9 +78,11 @@ type CubePlane struct {
 }
 
 type CubeData struct {
-	attrs []string
-	locX  int64
-	locY  int64
+	attrs  []string
+	locX   int64
+	locY   int64
+	ttl    int64
+	active bool
 }
 
 func Init(app *application.Application, cmd string) *CubePlane {
@@ -420,18 +423,80 @@ func (cp *CubePlane) Update(id string, attrs []string) {
 	x %= cp.size - 1
 	y %= cp.size - 1
 
+done:
 	for j := range cp.plane[0][y:] {
 		for i := range cp.plane[x:][j] {
 			node := cp.plane[i][j]
-			if node.Name() == "" || node.Name() == id {
-				d := CubeData{attrs: attrs, locX: int64(i), locY: int64(j)}
-				node.SetUserData(d)
-				node.SetName(id)
+			if node.Name() == id && cp.isActive(node) {
+				ud := node.UserData().(CubeData)
+				ud.attrs = attrs
+				node.SetUserData(ud)
 				cp.updateCubeStatus(node)
-				return
+				break done
+			} else if !cp.isActive(node) {
+				ud := node.UserData().(CubeData)
+				ud.attrs = attrs
+				node.SetUserData(ud)
+				node.SetName(id)
+				cp.makeActive(node)
+				cp.updateCubeStatus(node)
+				break done
 			}
 		}
 	}
+	//	cp.dumpPlane()
+}
+
+func (cp *CubePlane) CullExpiredCubes() {
+	for x := range cp.plane {
+		for y := range cp.plane[x] {
+			node := cp.plane[x][y]
+			if cp.isActive(node) && cp.isExpired(node) {
+				cp.makeInactive(node)
+				cp.updateCubeStatus(node)
+			}
+		}
+	}
+	cp.ttl++
+}
+
+func (cp *CubePlane) isExpired(node *core.Node) bool {
+	ud := node.UserData().(CubeData)
+	return ud.ttl < (cp.ttl - 2)
+}
+
+func (cp *CubePlane) isActive(node *core.Node) bool {
+	ud := node.UserData().(CubeData)
+	return ud.active
+}
+
+func (cp *CubePlane) makeInactive(node *core.Node) {
+	node.SetName("")
+	ud := node.UserData().(CubeData)
+	ud.active = false
+	ud.attrs = nil
+	ud.ttl = 0
+	node.SetUserData(ud)
+}
+
+func (cp *CubePlane) makeActive(node *core.Node) {
+	ud := node.UserData().(CubeData)
+	ud.active = true
+	node.SetUserData(ud)
+	ud.ttl = cp.ttl
+}
+
+func (cp *CubePlane) dumpPlane() {
+
+	fmt.Println("Dumping CubePlane:")
+	for y := range cp.plane {
+		for x := range cp.plane {
+			name := cp.plane[x][y].Name()
+			fmt.Printf("%5s\t", name)
+		}
+		fmt.Println("")
+	}
+
 }
 
 func (cp *CubePlane) updateCubeStatus(node *core.Node) {
@@ -439,22 +504,27 @@ func (cp *CubePlane) updateCubeStatus(node *core.Node) {
 	type meshI interface {
 		EmissiveColor() math32.Color
 		SetEmissiveColor(*math32.Color)
-		SetColor(color *math32.Color)
+		SetColor(*math32.Color)
 	}
-
 	ig := node.Children()[0].(graphic.IGraphic)
 	gr := ig.GetGraphic()
 	imesh := gr.GetMaterial(0).(meshI)
-	ud := node.UserData().(CubeData)
 
-	imesh.SetColor(cp.cubeActiveColor)
+	if cp.isActive(node) {
+		ud := node.UserData().(CubeData)
+		imesh.SetColor(cp.cubeActiveColor)
 
-	cpu, _ := strconv.ParseFloat(ud.attrs[2], 64)
-	cpu /= 10
+		cpu, _ := strconv.ParseFloat(ud.attrs[2], 64)
+		cpu /= 10
 
-	if float32(cpu) >= .5 {
-		gr.SetMatrix(math32.NewMatrix4().MakeTranslation(0, 0, float32(cpu)/4))
-		gr.SetScaleZ(float32(cpu))
+		if float32(cpu) >= .5 {
+			gr.SetMatrix(math32.NewMatrix4().MakeTranslation(0, 0, float32(cpu)/4))
+			gr.SetScaleZ(float32(cpu))
+		}
+	} else {
+		imesh.SetColor(cp.cubeInactiveColor)
+		gr.SetMatrix(math32.NewMatrix4().MakeTranslation(0, 0, cp.cubeSize/4))
+		gr.SetScaleZ(cp.cubeSize)
 	}
 }
 
@@ -485,6 +555,7 @@ func (cp *CubePlane) initCubePlane() {
 			node.SetPosition(posX, posY, 0.0)
 			d := CubeData{locX: x, locY: y}
 			node.SetUserData(d)
+			cp.makeInactive(node)
 			node.Add(mesh)
 			cp.app.Scene().Add(node)
 			cp.plane[x][y] = node

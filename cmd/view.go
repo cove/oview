@@ -62,6 +62,7 @@ func cmdView(cmd *cobra.Command, args []string) {
 
 	app.SetInterval(time.Duration(5*time.Second), nil,
 		func(i interface{}) {
+			cp.CullExpiredCubes()
 			table, _ := ReadInTable(args[0], strings.Join(args[1:], " "))
 			for j := range table {
 				cp.Update(j, table[j])
