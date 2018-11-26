@@ -21,6 +21,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/cove/oq/pkg/fonts"
+
 	"github.com/g3n/engine/text"
 
 	"github.com/g3n/engine/camera/control"
@@ -355,7 +357,7 @@ func (cp *CubePlane) initHud() {
 	cp.hudPanel = panel
 
 	// font
-	font, err := text.NewFont("fonts/Orbitron/Orbitron-Regular.ttf")
+	font, err := text.NewFontFromData(fonts.OrbitronRegular())
 	if err != nil {
 		panic(err.Error())
 	}
