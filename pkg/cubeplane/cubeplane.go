@@ -59,11 +59,10 @@ type CubePlane struct {
 	cubeInactiveColor *math32.Color
 	cubeActiveColor   *math32.Color
 
-	cursorX         int64
-	cursorY         int64
-	selected        *core.Node
-	selectedColor   *math32.Color
-	selectedChanged bool
+	cursorX       int64
+	cursorY       int64
+	selected      *core.Node
+	selectedColor *math32.Color
 
 	backgroundColor *math32.Color
 
@@ -238,7 +237,7 @@ func (cp *CubePlane) onKey(evname string, ev interface{}) {
 		if cp.cursorY > cp.size-1 {
 			cp.cursorY = cp.size - 1
 		}
-		cp.selectedChanged = true
+		cp.updateSelected()
 
 	case window.KeyRight:
 		fallthrough
@@ -259,7 +258,7 @@ func (cp *CubePlane) onKey(evname string, ev interface{}) {
 		if cp.cursorY > cp.size-1 {
 			cp.cursorY = cp.size - 1
 		}
-		cp.selectedChanged = true
+		cp.updateSelected()
 
 	case window.KeyUp:
 		fallthrough
@@ -280,7 +279,7 @@ func (cp *CubePlane) onKey(evname string, ev interface{}) {
 		if cp.cursorY > cp.size-1 {
 			cp.cursorY = cp.size - 1
 		}
-		cp.selectedChanged = true
+		cp.updateSelected()
 
 	case window.KeyDown:
 		fallthrough
@@ -301,7 +300,7 @@ func (cp *CubePlane) onKey(evname string, ev interface{}) {
 		if cp.cursorY > cp.size-1 {
 			cp.cursorY = cp.size - 1
 		}
-		cp.selectedChanged = true
+		cp.updateSelected()
 
 	case window.KeyR:
 		cp.rotate = !cp.rotate
@@ -309,15 +308,9 @@ func (cp *CubePlane) onKey(evname string, ev interface{}) {
 	case window.KeyQ:
 		cp.app.Quit()
 	}
-
-	cp.updateSelected()
 }
 
 func (cp *CubePlane) updateSelected() {
-
-	if !cp.selectedChanged {
-		return
-	}
 
 	type matI interface {
 		EmissiveColor() math32.Color
@@ -431,9 +424,8 @@ func (cp *CubePlane) Update(id string, attrs []string) {
 				cp.updateCubeStatus(node)
 
 				if cp.selected == node {
-					cp.selectedChanged = true
+					cp.updateSelected()
 				}
-				cp.updateSelected()
 				return
 			}
 		}
@@ -452,9 +444,8 @@ func (cp *CubePlane) Update(id string, attrs []string) {
 				cp.updateCubeStatus(node)
 
 				if cp.selected == node {
-					cp.selectedChanged = true
+					cp.updateSelected()
 				}
-				cp.updateSelected()
 				return
 			}
 		}
