@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"os"
@@ -63,7 +64,7 @@ func cmdView(cmd *cobra.Command, args []string) {
 	}
 
 	cp := cubeplane.Init(app, strings.Join(args, " "))
-	go ReadInTable(args[0], strings.Join(args[1:], " "), cp)
+	go PollCmd(args[0], strings.Join(args[1:], " "), cp)
 
 	if profile {
 		fmt.Println("PROFILING")
@@ -92,8 +93,9 @@ func cmdView(cmd *cobra.Command, args []string) {
 	}
 }
 
-func ReadInTable(cmd, args string, cp *cubeplane.CubePlane) {
+func PollCmd(cmd, args string, cp *cubeplane.CubePlane) {
 
+	var header cubeplane.CubeHeader
 	for {
 		run := exec.Command(cmd, args)
 		stdout, err := run.StdoutPipe()
@@ -105,17 +107,36 @@ func ReadInTable(cmd, args string, cp *cubeplane.CubePlane) {
 			panic(err)
 		}
 
-		var header cubeplane.CubeHeader
-		table, header := txt.NewTable(stdout)
+		scanner := bufio.NewScanner(stdout)
+		if ok := scanner.Scan(); !ok {
+			return
+		}
+
+		// XXX assumes first line is header always
+		if header == nil {
+			line := scanner.Text()
+			if txt.IsTableHeader(line) {
+				header = strings.Fields(line)
+				cp.SetHeader(header)
+			}
+		}
+
+		table := cubeplane.CubeUpdate{}
+		for i := 0; scanner.Scan(); i++ {
+			line := scanner.Text()
+			fields := strings.Fields(line)
+			table = append(table, fields)
+
+			if err := scanner.Err(); err != nil {
+				fmt.Fprintln(os.Stderr, "reading standard input:", err)
+				return
+			}
+		}
+		cp.UpdateChan <- table
 
 		if err := run.Wait(); err != nil {
 			panic(err)
 		}
-
-		if header == nil {
-			cp.SetHeader(header)
-		}
-		cp.UpdateChan <- table
 		time.Sleep(5 * time.Second)
 	}
 }

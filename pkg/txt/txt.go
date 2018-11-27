@@ -15,83 +15,10 @@
 package txt
 
 import (
-	"bufio"
-	"bytes"
-	"fmt"
-	"io"
-	"os"
-	"strings"
 	"unicode"
 )
 
-func NewTableFromBuffer(data []byte) ([][]string, []string) {
-	fd := bytes.NewReader(data)
-	return NewTable(fd)
-}
-
-func NewTable(fd io.Reader) ([][]string, []string) {
-
-	scanner := bufio.NewScanner(fd)
-	if ok := scanner.Scan(); !ok {
-		return nil, nil
-	}
-	var header []string
-	line := scanner.Text()
-	if isTableHeader(line) {
-		header = strings.Fields(line)
-	}
-
-	table := [][]string{}
-	for i := 0; scanner.Scan(); i++ {
-
-		line := scanner.Text()
-		fields := strings.Fields(line)
-		table = append(table, fields)
-
-		if err := scanner.Err(); err != nil {
-			fmt.Fprintln(os.Stderr, "reading standard input:", err)
-			return nil, nil
-		}
-	}
-
-	return table, header
-}
-
-func findFirstUniqueValuedColumn(table [][]string) (int, []string) {
-
-	var header []string
-	uniqueColumn := -1
-	for x := range table[0] {
-		previous := ""
-		for y := range table {
-			if isTableHeader(strings.Join(table[y], " ")) {
-				header = table[y]
-				continue
-			}
-
-			if table[y] == nil {
-				break
-			}
-
-			if previous == "" {
-				previous = table[y][x]
-			} else if previous != table[y][x] {
-				uniqueColumn = x
-			} else {
-				uniqueColumn = -1
-				break
-			}
-		}
-
-		if uniqueColumn != -1 {
-			break
-		}
-	}
-
-	return uniqueColumn, header
-}
-
-func isTableHeader(s string) bool {
+func IsTableHeader(s string) bool {
 	score := 0.0
 	for _, c := range s {
 		if unicode.IsUpper(c) || unicode.IsSpace(c) || c == '-' || c == '=' {
