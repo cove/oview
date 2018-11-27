@@ -15,14 +15,18 @@
 package cmd
 
 import (
+	"fmt"
+	"log"
 	"os"
 	"os/exec"
+	"runtime"
+	"runtime/pprof"
 	"strings"
 	"time"
 
-	"github.com/cove/oq/pkg/cubeplane"
-
 	"github.com/cove/oq/pkg/txt"
+
+	"github.com/cove/oq/pkg/cubeplane"
 
 	"github.com/g3n/engine/util/application"
 
@@ -36,8 +40,14 @@ var viewCmd = &cobra.Command{
 	Run:   cmdView,
 }
 
+var (
+	profile bool
+)
+
 func init() {
 	rootCmd.AddCommand(viewCmd)
+	viewCmd.Flags().BoolVar(&profile, "profile", false, "profile CPU and memory usage")
+
 }
 
 func cmdView(cmd *cobra.Command, args []string) {
@@ -53,39 +63,59 @@ func cmdView(cmd *cobra.Command, args []string) {
 	}
 
 	cp := cubeplane.Init(app, strings.Join(args, " "))
+	go ReadInTable(args[0], strings.Join(args[1:], " "), cp)
 
-	table, header := ReadInTable(args[0], strings.Join(args[1:], " "))
-	for j := range table {
-		cp.Update(j, table[j])
+	if profile {
+		fmt.Println("PROFILING")
+		f, err := os.Create("profilecpu.prof")
+		if err != nil {
+			log.Fatal("could not create CPU profile: ", err)
+		}
+		if err := pprof.StartCPUProfile(f); err != nil {
+			log.Fatal("could not start CPU profile: ", err)
+		}
+		defer pprof.StopCPUProfile()
 	}
-	cp.Header = header
-
-	app.SetInterval(time.Duration(5*time.Second), nil,
-		func(i interface{}) {
-			cp.CullExpiredCubes()
-			table, _ := ReadInTable(args[0], strings.Join(args[1:], " "))
-			for j := range table {
-				cp.Update(j, table[j])
-			}
-		})
 
 	app.Run()
+
+	if profile {
+		f, err := os.Create("profilemem.prof")
+		if err != nil {
+			log.Fatal("could not create memory profile: ", err)
+		}
+		runtime.GC() // get up-to-date statistics
+		if err := pprof.WriteHeapProfile(f); err != nil {
+			log.Fatal("could not write memory profile: ", err)
+		}
+		f.Close()
+	}
 }
 
-func ReadInTable(cmd, args string) (map[string][]string, []string) {
-	run := exec.Command(cmd, args)
-	stdout, err := run.StdoutPipe()
-	if err != nil {
-		panic(err)
-	}
+func ReadInTable(cmd, args string, cp *cubeplane.CubePlane) {
 
-	if err := run.Start(); err != nil {
-		panic(err)
-	}
-	table, header, _ := txt.NewTable(stdout)
+	for {
+		run := exec.Command(cmd, args)
+		stdout, err := run.StdoutPipe()
+		if err != nil {
+			panic(err)
+		}
 
-	if err := run.Wait(); err != nil {
-		panic(err)
+		if err := run.Start(); err != nil {
+			panic(err)
+		}
+
+		var header cubeplane.CubeHeader
+		table, header := txt.NewTable(stdout)
+
+		if err := run.Wait(); err != nil {
+			panic(err)
+		}
+
+		if header == nil {
+			cp.SetHeader(header)
+		}
+		cp.UpdateChan <- table
+		time.Sleep(5 * time.Second)
 	}
-	return table, header
 }

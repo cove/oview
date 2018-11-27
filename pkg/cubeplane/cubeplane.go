@@ -20,6 +20,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/cove/oq/pkg/fonts"
 
@@ -73,9 +74,15 @@ type CubePlane struct {
 
 	rc      *core.Raycaster
 	command string
-	Header  []string
+	header  []string
 	rotate  bool
+
+	UpdateChan CubeUpdateChan
 }
+
+type CubeUpdateChan chan CubeUpdate
+type CubeUpdate [][]string
+type CubeHeader []string
 
 type CubeData struct {
 	attrs  []string
@@ -139,6 +146,7 @@ func Init(app *application.Application, cmd string) *CubePlane {
 		command:            cmd,
 		rc:                 core.NewRaycaster(&math32.Vector3{}, &math32.Vector3{}),
 		rotate:             true,
+		UpdateChan:         make(CubeUpdateChan, 500),
 	}
 
 	// Sets window background color
@@ -153,18 +161,29 @@ func Init(app *application.Application, cmd string) *CubePlane {
 	app.Window().Subscribe(window.OnKeyRepeat, func(evname string, ev interface{}) {
 		cp.onKey(evname, ev)
 	})
+	app.Window().Subscribe(window.OnMouseDown, func(evname string, ev interface{}) {
+		cp.onMouse(evname, ev)
+	})
 	cp.app.SubscribeID(application.OnAfterRender, 1, func(evname string, ev interface{}) {
 		if cp.rotate {
 			cp.app.Scene().RotateOnAxis(&math32.Vector3{0, 0, 1},
 				app.FrameDeltaSeconds()*-2*math32.Pi/cp.secondsPerRotation)
 		}
 	})
-	app.Window().Subscribe(window.OnMouseDown, func(evname string, ev interface{}) {
-		cp.onMouse(evname, ev)
-	})
 
 	cp.initCubePlane()
 	cp.initHud()
+
+	app.SetInterval(time.Duration(5*time.Second), nil,
+		func(i interface{}) {
+			select {
+			case table := <-cp.UpdateChan:
+				cp.CullExpiredCubes()
+				for i := range table {
+					cp.Update(table[i][1], table[i])
+				}
+			}
+		})
 
 	return cp
 }
@@ -370,20 +389,18 @@ func (cp *CubePlane) initHud() {
 }
 
 func (cp *CubePlane) updateHud() {
-
 	cp.app.Gui().GetPanel().RemoveAll(true)
 	cp.app.Gui().GetPanel().Add(cp.hudPanel)
 
 	node := cp.plane[cp.cursorX][cp.cursorY]
 	d := node.UserData().(CubeData)
 	if d.attrs != nil {
-		for i := range cp.Header {
-			basename := path.Base(d.attrs[i]) // everything gets basenamed
+		for i := range cp.header {
 
 			lineSpace := float32(8.0)
 
 			// heading
-			heading := gui.NewButton(strings.ToLower(cp.Header[i]))
+			heading := gui.NewButton(strings.ToLower(cp.header[i]))
 			heading.SetPosition(20, 20.0+(float32(i)*(float32(cp.hudTextSize)+lineSpace)))
 			heading.Label.SetFont(cp.hudFont)
 			heading.SetStyles(&gui.ButtonStyles{
@@ -391,11 +408,12 @@ func (cp *CubePlane) updateHud() {
 				Normal: gui.ButtonStyle{FgColor: *colors.Solarized4("base1", 1.0)}},
 			)
 			heading.Subscribe(gui.OnClick, func(evname string, ev interface{}) {
-				fmt.Printf("button %v OnClick\n", cp.Header[i])
+				fmt.Printf("button %v OnClick\n", cp.header[i])
 			})
 			cp.app.Gui().GetPanel().Add(heading)
 
 			// values
+			basename := path.Base(d.attrs[i]) // everything gets basenamed
 			values := gui.NewButton(basename)
 			values.SetPosition(110, 20.0+(float32(i)*(float32(cp.hudTextSize)+lineSpace)))
 			values.Label.SetFont(cp.hudFont)
@@ -404,7 +422,7 @@ func (cp *CubePlane) updateHud() {
 				Normal: gui.ButtonStyle{FgColor: *colors.Solarized4("base2", 1.0)}},
 			)
 			values.Subscribe(gui.OnClick, func(evname string, ev interface{}) {
-				fmt.Printf("button %v OnClick\n", cp.Header[i])
+				fmt.Printf("button %v OnClick\n", cp.header[i])
 			})
 			cp.app.Gui().GetPanel().Add(values)
 		}
@@ -490,6 +508,10 @@ func (cp *CubePlane) makeActive(node *core.Node) {
 	ud.active = true
 	node.SetUserData(ud)
 	ud.ttl = cp.ttl
+}
+
+func (cp *CubePlane) SetHeader(header CubeHeader) {
+	cp.header = header
 }
 
 func (cp *CubePlane) dumpPlane() {

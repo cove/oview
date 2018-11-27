@@ -16,6 +16,7 @@ package txt
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -23,38 +24,37 @@ import (
 	"unicode"
 )
 
-func NewTable(fd io.Reader) (map[string][]string, []string, error) {
-	tmpTable := make([][]string, 500)
+func NewTableFromBuffer(data []byte) ([][]string, []string) {
+	fd := bytes.NewReader(data)
+	return NewTable(fd)
+}
+
+func NewTable(fd io.Reader) ([][]string, []string) {
+
 	scanner := bufio.NewScanner(fd)
-	for i := range tmpTable {
-		if ok := scanner.Scan(); !ok {
-			break
-		}
+	if ok := scanner.Scan(); !ok {
+		return nil, nil
+	}
+	var header []string
+	line := scanner.Text()
+	if isTableHeader(line) {
+		header = strings.Fields(line)
+	}
+
+	table := [][]string{}
+	for i := 0; scanner.Scan(); i++ {
 
 		line := scanner.Text()
 		fields := strings.Fields(line)
-		tmpTable[i] = make([]string, len(fields))
-		tmpTable[i] = fields
+		table = append(table, fields)
 
 		if err := scanner.Err(); err != nil {
 			fmt.Fprintln(os.Stderr, "reading standard input:", err)
+			return nil, nil
 		}
 	}
 
-	key, header := findFirstUniqueValuedColumn(tmpTable)
-	if key < 0 {
-		panic("no key column")
-	}
-
-	newTable := make(map[string][]string, len(tmpTable))
-	for y := range tmpTable {
-		if tmpTable[y] == nil {
-			break
-		}
-		newTable[tmpTable[y][key]] = tmpTable[y]
-	}
-
-	return newTable, header, nil
+	return table, header
 }
 
 func findFirstUniqueValuedColumn(table [][]string) (int, []string) {
