@@ -59,10 +59,11 @@ type CubePlane struct {
 	cubeInactiveColor *math32.Color
 	cubeActiveColor   *math32.Color
 
-	cursorX       int64
-	cursorY       int64
-	selected      *core.Node
-	selectedColor *math32.Color
+	cursorX         int64
+	cursorY         int64
+	selected        *core.Node
+	selectedColor   *math32.Color
+	selectedChanged bool
 
 	backgroundColor *math32.Color
 
@@ -237,7 +238,7 @@ func (cp *CubePlane) onKey(evname string, ev interface{}) {
 		if cp.cursorY > cp.size-1 {
 			cp.cursorY = cp.size - 1
 		}
-		cp.updateSelected()
+		cp.selectedChanged = true
 
 	case window.KeyRight:
 		fallthrough
@@ -258,7 +259,7 @@ func (cp *CubePlane) onKey(evname string, ev interface{}) {
 		if cp.cursorY > cp.size-1 {
 			cp.cursorY = cp.size - 1
 		}
-		cp.updateSelected()
+		cp.selectedChanged = true
 
 	case window.KeyUp:
 		fallthrough
@@ -279,9 +280,7 @@ func (cp *CubePlane) onKey(evname string, ev interface{}) {
 		if cp.cursorY > cp.size-1 {
 			cp.cursorY = cp.size - 1
 		}
-
-		cp.updateSelected()
-		break
+		cp.selectedChanged = true
 
 	case window.KeyDown:
 		fallthrough
@@ -302,8 +301,7 @@ func (cp *CubePlane) onKey(evname string, ev interface{}) {
 		if cp.cursorY > cp.size-1 {
 			cp.cursorY = cp.size - 1
 		}
-		cp.updateSelected()
-		break
+		cp.selectedChanged = true
 
 	case window.KeyR:
 		cp.rotate = !cp.rotate
@@ -311,9 +309,15 @@ func (cp *CubePlane) onKey(evname string, ev interface{}) {
 	case window.KeyQ:
 		cp.app.Quit()
 	}
+
+	cp.updateSelected()
 }
 
 func (cp *CubePlane) updateSelected() {
+
+	if !cp.selectedChanged {
+		return
+	}
 
 	type matI interface {
 		EmissiveColor() math32.Color
@@ -416,40 +420,51 @@ func (cp *CubePlane) updateHud() {
 
 func (cp *CubePlane) Update(id string, attrs []string) {
 
-	// Try to position ID's on plane in a predictable order
-	x, _ := strconv.ParseInt(id, 10, 64)
-	y := x
-
-	x %= cp.size - 1
-	y %= cp.size - 1
-
-done:
-	for j := range cp.plane[0][y:] {
-		for i := range cp.plane[x:][j] {
+	for j := range cp.plane {
+		for i := range cp.plane {
 			node := cp.plane[i][j]
-			if node.Name() == id && cp.isActive(node) {
+			if node.Name() == id {
 				ud := node.UserData().(CubeData)
 				ud.attrs = attrs
+				ud.ttl++
 				node.SetUserData(ud)
 				cp.updateCubeStatus(node)
-				break done
-			} else if !cp.isActive(node) {
+
+				if cp.selected == node {
+					cp.selectedChanged = true
+				}
+				cp.updateSelected()
+				return
+			}
+		}
+	}
+
+	for j := range cp.plane {
+		for i := range cp.plane {
+			node := cp.plane[i][j]
+			if !cp.isActive(node) {
 				ud := node.UserData().(CubeData)
 				ud.attrs = attrs
+				ud.ttl = cp.ttl
 				node.SetUserData(ud)
 				node.SetName(id)
 				cp.makeActive(node)
 				cp.updateCubeStatus(node)
-				break done
+
+				if cp.selected == node {
+					cp.selectedChanged = true
+				}
+				cp.updateSelected()
+				return
 			}
 		}
 	}
-	//	cp.dumpPlane()
+
 }
 
 func (cp *CubePlane) CullExpiredCubes() {
 	for x := range cp.plane {
-		for y := range cp.plane[x] {
+		for y := range cp.plane {
 			node := cp.plane[x][y]
 			if cp.isActive(node) && cp.isExpired(node) {
 				cp.makeInactive(node)
@@ -462,7 +477,7 @@ func (cp *CubePlane) CullExpiredCubes() {
 
 func (cp *CubePlane) isExpired(node *core.Node) bool {
 	ud := node.UserData().(CubeData)
-	return ud.ttl < (cp.ttl - 2)
+	return ud.ttl < (cp.ttl - 1)
 }
 
 func (cp *CubePlane) isActive(node *core.Node) bool {
@@ -520,7 +535,11 @@ func (cp *CubePlane) updateCubeStatus(node *core.Node) {
 		if float32(cpu) >= .5 {
 			gr.SetMatrix(math32.NewMatrix4().MakeTranslation(0, 0, float32(cpu)/4))
 			gr.SetScaleZ(float32(cpu))
+		} else {
+			gr.SetMatrix(math32.NewMatrix4().MakeTranslation(0, 0, float32(cp.cubeSize)/4))
+			gr.SetScaleZ(float32(cp.cubeSize))
 		}
+
 	} else {
 		imesh.SetColor(cp.cubeInactiveColor)
 		gr.SetMatrix(math32.NewMatrix4().MakeTranslation(0, 0, cp.cubeSize/4))
