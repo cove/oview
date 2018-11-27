@@ -16,13 +16,8 @@ package cubeplane
 
 import (
 	"fmt"
-	"path"
-	"runtime"
 	"strconv"
-	"strings"
 	"time"
-
-	"github.com/cove/oq/pkg/fonts"
 
 	"github.com/g3n/engine/text"
 
@@ -188,147 +183,6 @@ func Init(app *application.Application, cmd string) *CubePlane {
 	return cp
 }
 
-func (cp *CubePlane) onMouse(evname string, ev interface{}) {
-
-	// Convert mouse coordinates to normalized device coordinates
-	mev := ev.(*window.MouseEvent)
-	width, height := cp.app.Window().Size()
-	var x, y float32
-	if runtime.GOOS == "darwin" {
-		// OSX, not sure why it's different than Windows and Linux
-		x = 1*(mev.Xpos/float32(width)) - 1
-		y = -1*(mev.Ypos/float32(height)) + 1
-	} else {
-		// Linux and Windows
-		x = 2*(mev.Xpos/float32(width)) - 1
-		y = -2*(mev.Ypos/float32(height)) + 1
-	}
-
-	// Set the raycaster from the current camera and mouse coordinates
-	cp.app.Camera().SetRaycaster(cp.rc, x, y)
-	//fmt.Printf("rc:%+v\n", cp.rc.Ray)
-
-	// Checks intersection with all objects in the scene
-	intersects := cp.rc.IntersectObjects(cp.app.Scene().Children(), true)
-	//fmt.Printf("intersects:%+v\n", intersects)
-	if len(intersects) == 0 {
-		return
-	}
-
-	// Get the first object we intersected with
-	obj := intersects[0].Object
-	ig, ok := obj.(graphic.IGraphic)
-	if !ok {
-		return
-	}
-
-	// Save the x y coordinate on the node so we can identify it later after a raycast
-	node := ig.GetNode().Parent().GetNode()
-	ud, ok := node.UserData().(CubeData)
-	if ok {
-		cp.cursorX = ud.locX
-		cp.cursorY = ud.locY
-	}
-
-	cp.updateSelected()
-}
-
-func (cp *CubePlane) onKey(evname string, ev interface{}) {
-
-	key := ev.(*window.KeyEvent)
-	switch key.Keycode {
-	case window.KeyLeft:
-		fallthrough
-	case window.KeyA:
-		z := cp.app.Scene().Rotation().Z
-		cp.cursorX -= int64(math32.Round(math32.Cos(z)))
-		if cp.cursorX > cp.size-1 {
-			cp.cursorX = cp.size - 1
-		}
-		if cp.cursorX < 0 {
-			cp.cursorX = 0
-		}
-
-		cp.cursorY += int64(math32.Round(math32.Sin(z)))
-		if cp.cursorY < 0 {
-			cp.cursorY = 0
-		}
-		if cp.cursorY > cp.size-1 {
-			cp.cursorY = cp.size - 1
-		}
-		cp.updateSelected()
-
-	case window.KeyRight:
-		fallthrough
-	case window.KeyD:
-		z := cp.app.Scene().Rotation().Z
-		cp.cursorX += int64(math32.Round(math32.Cos(z)))
-		if cp.cursorX > cp.size-1 {
-			cp.cursorX = cp.size - 1
-		}
-		if cp.cursorX < 0 {
-			cp.cursorX = 0
-		}
-
-		cp.cursorY -= int64(math32.Round(math32.Sin(z)))
-		if cp.cursorY < 0 {
-			cp.cursorY = 0
-		}
-		if cp.cursorY > cp.size-1 {
-			cp.cursorY = cp.size - 1
-		}
-		cp.updateSelected()
-
-	case window.KeyUp:
-		fallthrough
-	case window.KeyW:
-		z := cp.app.Scene().Rotation().Z
-		cp.cursorX += int64(math32.Round(math32.Sin(z)))
-		if cp.cursorX > cp.size-1 {
-			cp.cursorX = cp.size - 1
-		}
-		if cp.cursorX < 0 {
-			cp.cursorX = 0
-		}
-
-		cp.cursorY += int64(math32.Round(math32.Cos(z)))
-		if cp.cursorY < 0 {
-			cp.cursorY = 0
-		}
-		if cp.cursorY > cp.size-1 {
-			cp.cursorY = cp.size - 1
-		}
-		cp.updateSelected()
-
-	case window.KeyDown:
-		fallthrough
-	case window.KeyS:
-		z := cp.app.Scene().Rotation().Z
-		cp.cursorX -= int64(math32.Round(math32.Sin(z)))
-		if cp.cursorX > cp.size-1 {
-			cp.cursorX = cp.size - 1
-		}
-		if cp.cursorX < 0 {
-			cp.cursorX = 0
-		}
-
-		cp.cursorY -= int64(math32.Round(math32.Cos(z)))
-		if cp.cursorY < 0 {
-			cp.cursorY = 0
-		}
-		if cp.cursorY > cp.size-1 {
-			cp.cursorY = cp.size - 1
-		}
-		cp.updateSelected()
-
-	case window.KeyR:
-		cp.rotate = !cp.rotate
-
-	case window.KeyQ:
-		cp.app.Quit()
-	}
-}
-
 func (cp *CubePlane) updateSelected() {
 
 	type matI interface {
@@ -357,78 +211,6 @@ func (cp *CubePlane) updateSelected() {
 	cp.updateHud()
 }
 
-func (cp *CubePlane) initHud() {
-
-	// panel
-	panel := gui.NewPanel(230, 200)
-	// XXX keep invisable, for later use
-	panel.SetVisible(false)
-	panel.SetContentSize(200, 190)
-	panel.SetPosition(20, 20)
-	style := gui.PanelStyle{
-		Margin:      gui.RectBounds{0, 0, 0, 0},
-		Border:      gui.RectBounds{1, 1, 1, 1},
-		Padding:     gui.RectBounds{8, 8, 8, 8},
-		BorderColor: *colors.Solarized4("cyan", .2),
-		BgColor:     math32.Color4{0, 0, 0, .2},
-	}
-	panel.ApplyStyle(&style)
-	cp.hudPanel = panel
-
-	// font
-	font, err := text.NewFontFromData(fonts.OrbitronRegular())
-	if err != nil {
-		panic(err.Error())
-	}
-	font.SetLineSpacing(1.0)
-	font.SetPointSize(cp.hudTextSize)
-	font.SetDPI(72)
-	font.SetFgColor(&math32.Color4{0, 0, 1, 1})
-	font.SetBgColor(&math32.Color4{1, 1, 0, 0.8})
-	cp.hudFont = font
-}
-
-func (cp *CubePlane) updateHud() {
-	cp.app.Gui().GetPanel().RemoveAll(true)
-	cp.app.Gui().GetPanel().Add(cp.hudPanel)
-
-	node := cp.plane[cp.cursorX][cp.cursorY]
-	d := node.UserData().(CubeData)
-	if d.attrs != nil {
-		for i := range cp.header {
-
-			lineSpace := float32(8.0)
-
-			// heading
-			heading := gui.NewButton(strings.ToLower(cp.header[i]))
-			heading.SetPosition(20, 20.0+(float32(i)*(float32(cp.hudTextSize)+lineSpace)))
-			heading.Label.SetFont(cp.hudFont)
-			heading.SetStyles(&gui.ButtonStyles{
-				Over:   gui.ButtonStyle{FgColor: *math32.NewColor4("cyan", 1.0)},
-				Normal: gui.ButtonStyle{FgColor: *colors.Solarized4("base1", 1.0)}},
-			)
-			heading.Subscribe(gui.OnClick, func(evname string, ev interface{}) {
-				fmt.Printf("button %v OnClick\n", cp.header[i])
-			})
-			cp.app.Gui().GetPanel().Add(heading)
-
-			// values
-			basename := path.Base(d.attrs[i]) // everything gets basenamed
-			values := gui.NewButton(basename)
-			values.SetPosition(110, 20.0+(float32(i)*(float32(cp.hudTextSize)+lineSpace)))
-			values.Label.SetFont(cp.hudFont)
-			values.SetStyles(&gui.ButtonStyles{
-				Over:   gui.ButtonStyle{FgColor: *math32.NewColor4("cyan", 1.0)},
-				Normal: gui.ButtonStyle{FgColor: *colors.Solarized4("base2", 1.0)}},
-			)
-			values.Subscribe(gui.OnClick, func(evname string, ev interface{}) {
-				fmt.Printf("button %v OnClick\n", cp.header[i])
-			})
-			cp.app.Gui().GetPanel().Add(values)
-		}
-	}
-}
-
 func (cp *CubePlane) Update(id string, attrs []string) {
 
 	for j := range cp.plane {
@@ -452,13 +234,13 @@ func (cp *CubePlane) Update(id string, attrs []string) {
 	for j := range cp.plane {
 		for i := range cp.plane {
 			node := cp.plane[i][j]
-			if !cp.isActive(node) {
+			if !isActive(node) {
 				ud := node.UserData().(CubeData)
 				ud.attrs = attrs
 				ud.ttl = cp.ttl
 				node.SetUserData(ud)
 				node.SetName(id)
-				cp.makeActive(node)
+				makeActive(node)
 				cp.updateCubeStatus(node)
 
 				if cp.selected == node {
@@ -475,8 +257,8 @@ func (cp *CubePlane) CullExpiredCubes() {
 	for x := range cp.plane {
 		for y := range cp.plane {
 			node := cp.plane[x][y]
-			if cp.isActive(node) && cp.isExpired(node) {
-				cp.makeInactive(node)
+			if isActive(node) && cp.isExpired(node) {
+				makeInactive(node)
 				cp.updateCubeStatus(node)
 			}
 		}
@@ -489,25 +271,22 @@ func (cp *CubePlane) isExpired(node *core.Node) bool {
 	return ud.ttl < (cp.ttl - 1)
 }
 
-func (cp *CubePlane) isActive(node *core.Node) bool {
+func isActive(node *core.Node) bool {
 	ud := node.UserData().(CubeData)
 	return ud.active
 }
 
-func (cp *CubePlane) makeInactive(node *core.Node) {
+func makeInactive(node *core.Node) {
 	node.SetName("")
 	ud := node.UserData().(CubeData)
 	ud.active = false
-	ud.attrs = nil
-	ud.ttl = 0
 	node.SetUserData(ud)
 }
 
-func (cp *CubePlane) makeActive(node *core.Node) {
+func makeActive(node *core.Node) {
 	ud := node.UserData().(CubeData)
 	ud.active = true
 	node.SetUserData(ud)
-	ud.ttl = cp.ttl
 }
 
 func (cp *CubePlane) SetHeader(header CubeHeader) {
@@ -538,7 +317,7 @@ func (cp *CubePlane) updateCubeStatus(node *core.Node) {
 	gr := ig.GetGraphic()
 	imesh := gr.GetMaterial(0).(meshI)
 
-	if cp.isActive(node) {
+	if isActive(node) {
 		ud := node.UserData().(CubeData)
 		imesh.SetColor(cp.cubeActiveColor)
 
@@ -555,8 +334,6 @@ func (cp *CubePlane) updateCubeStatus(node *core.Node) {
 
 	} else {
 		imesh.SetColor(cp.cubeInactiveColor)
-		gr.SetMatrix(math32.NewMatrix4().MakeTranslation(0, 0, cp.cubeSize/4))
-		gr.SetScaleZ(cp.cubeSize)
 	}
 }
 
@@ -587,7 +364,7 @@ func (cp *CubePlane) initCubePlane() {
 			node.SetPosition(posX, posY, 0.0)
 			d := CubeData{locX: x, locY: y}
 			node.SetUserData(d)
-			cp.makeInactive(node)
+			makeInactive(node)
 			node.Add(mesh)
 			cp.app.Scene().Add(node)
 			cp.plane[x][y] = node
