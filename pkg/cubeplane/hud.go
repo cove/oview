@@ -18,16 +18,13 @@ import (
 	"path"
 	"strings"
 
-	"github.com/cove/oq/pkg/fonts"
 	"github.com/g3n/engine/gui"
 	"github.com/g3n/engine/math32"
-	"github.com/g3n/engine/text"
 )
 
 type Hud struct {
 	textSize  float64
 	textColor *math32.Color
-	font      *text.Font
 	headers   *gui.Panel
 	values    *gui.Panel
 	buttons   []*gui.Button
@@ -39,25 +36,13 @@ type HudData struct {
 
 func (cp *CubePlane) initHud() {
 
-	cp.hud.headers = gui.NewPanel(600, 900)
+	cp.hud.headers = gui.NewPanel(500, 500)
 	cp.hud.headers.SetPosition(10, 10)
 	//cp.hud.headers.SetBorders(1, 1, 1, 1)
 
-	cp.hud.values = gui.NewPanel(600, 900)
+	cp.hud.values = gui.NewPanel(500, 500)
 	//cp.hud.values.SetBorders(1, 1, 1, 1)
 	cp.hud.headers.Add(cp.hud.values)
-
-	// load font
-	font, err := text.NewFontFromData(fonts.Gallant12x22())
-	if err != nil {
-		panic(err.Error())
-	}
-	font.SetLineSpacing(1.0)
-	font.SetPointSize(cp.hud.textSize)
-	font.SetDPI(72)
-	font.SetFgColor(&math32.Color4{0, 0, 1, 1})
-	font.SetBgColor(&math32.Color4{1, 1, 0, 0.8})
-	cp.hud.font = font
 
 }
 
@@ -69,8 +54,7 @@ func (cp *CubePlane) updateHud() {
 			lineSpace := float32(8.0)
 			name := cp.header[i]
 			header := gui.NewButton(name)
-			header.SetPosition(20, 20.0+(float32(i)*(float32(cp.hud.textSize)+lineSpace)))
-			header.Label.SetFont(cp.hud.font)
+			header.SetPosition(0, 20.0+(float32(i)*(float32(cp.hud.textSize)+lineSpace)))
 			header.SetStyles(&gui.ButtonStyles{
 				Over:   gui.ButtonStyle{FgColor: *math32.NewColor4("Gold", 1.0)},
 				Normal: gui.ButtonStyle{FgColor: *math32.NewColor4("White", 1.0)},
@@ -121,7 +105,6 @@ func (cp *CubePlane) updateHud() {
 		value := gui.NewLabel(name)
 		value.SetPosition(110, 20.0+(float32(i)*(float32(cp.hud.textSize)+lineSpace)))
 		value.SetColor(math32.NewColor("White"))
-		value.SetFont(cp.hud.font)
 		cp.hud.values.Add(value)
 	}
 
