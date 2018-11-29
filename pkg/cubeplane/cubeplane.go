@@ -173,38 +173,37 @@ func Init(app *application.Application, cmd string) *CubePlane {
 	})
 
 	cp.initCubePlane()
-
 	// select first cube to start
 	cp.selected = cp.plane[0][0]
-
 	cp.initHud()
 
-	app.SetInterval(time.Duration(5*time.Second), nil,
-		func(i interface{}) {
-			select {
-			case table := <-cp.UpdateChan:
-
-				// use first value that's a number for scaling cubes
-				if cp.selectedHeaderIdx < 0 {
-					for i, v := range table[0] {
-						if _, err := strconv.ParseFloat(v, 64); err == nil {
-							cp.selectedHeaderIdx = i
-							break
-						}
-					}
-					if cp.selectedHeaderIdx < 0 {
-						panic("no numbers found to scale cubes with")
-					}
-				}
-				cp.updateHud()
-				cp.CullExpiredCubes()
-				for i := range table {
-					cp.Update(table[i][1], table[i])
-				}
-			}
-		})
+	app.SetInterval(time.Duration(5*time.Second), nil, cp.updatePlane)
 
 	return cp
+}
+
+func (cp *CubePlane) updatePlane(i interface{}) {
+	select {
+	case table := <-cp.UpdateChan:
+
+		// use first value that's a number for scaling cubes
+		if cp.selectedHeaderIdx < 0 {
+			for i, v := range table[0] {
+				if _, err := strconv.ParseFloat(v, 64); err == nil {
+					cp.selectedHeaderIdx = i
+					break
+				}
+			}
+			if cp.selectedHeaderIdx < 0 {
+				panic("no numbers found to scale cubes with")
+			}
+		}
+		cp.updateHud()
+		cp.CullExpiredCubes()
+		for i := range table {
+			cp.Update(table[i][1], table[i])
+		}
+	}
 }
 
 func (cp *CubePlane) updateSelected() {

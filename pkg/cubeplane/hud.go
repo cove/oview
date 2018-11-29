@@ -18,7 +18,6 @@ import (
 	"path"
 	"strings"
 
-	"github.com/cove/oq/pkg/colors"
 	"github.com/cove/oq/pkg/fonts"
 	"github.com/g3n/engine/gui"
 	"github.com/g3n/engine/math32"
@@ -60,8 +59,8 @@ func (cp *CubePlane) updateHud() {
 			header.SetPosition(20, 20.0+(float32(i)*(float32(cp.hudTextSize)+lineSpace)))
 			header.Label.SetFont(cp.hudFont)
 			header.SetStyles(&gui.ButtonStyles{
-				Over:   gui.ButtonStyle{FgColor: *math32.NewColor4("cyan", 1.0)},
-				Normal: gui.ButtonStyle{FgColor: *colors.Solarized4("base1", 1.0)},
+				Over:   gui.ButtonStyle{FgColor: *math32.NewColor4("Gold", 1.0)},
+				Normal: gui.ButtonStyle{FgColor: *math32.NewColor4("White", 1.0)},
 			})
 
 			// set an id on the button so we know which one was clicked
@@ -72,15 +71,15 @@ func (cp *CubePlane) updateHud() {
 				if cp.selectedHeaderIdx > -1 {
 					unselected := cp.hubHeaderButtons[cp.selectedHeaderIdx]
 					unselected.SetStyles(&gui.ButtonStyles{
-						Over:   gui.ButtonStyle{FgColor: *math32.NewColor4("cyan", 1.0)},
-						Normal: gui.ButtonStyle{FgColor: *colors.Solarized4("base1", 1.0)},
+						Over:   gui.ButtonStyle{FgColor: *math32.NewColor4("Gold", 1.0)},
+						Normal: gui.ButtonStyle{FgColor: *math32.NewColor4("White", 1.0)},
 					})
 				}
 
 				selected := header
 				selected.SetStyles(&gui.ButtonStyles{
-					Over:   gui.ButtonStyle{FgColor: *math32.NewColor4("yellow", 1.0)},
-					Normal: gui.ButtonStyle{FgColor: *math32.NewColor4("white", 1.0)},
+					Over:   gui.ButtonStyle{FgColor: *math32.NewColor4("Gold", 1.0)},
+					Normal: gui.ButtonStyle{FgColor: *math32.NewColor4("Gold", 1.0)},
 				})
 				ud := selected.UserData().(HudData)
 				cp.selectedHeaderIdx = ud.attrIdx
@@ -101,13 +100,14 @@ func (cp *CubePlane) updateHud() {
 		return
 	}
 
+	// display updated values
 	cp.hudValues.DisposeChildren(true)
 	for i := range ud.attrs {
 		lineSpace := float32(8.0)
 		name := cleanCommandPaths(ud.attrs[i])
 		value := gui.NewLabel(name)
 		value.SetPosition(110, 20.0+(float32(i)*(float32(cp.hudTextSize)+lineSpace)))
-		value.SetColor(colors.Solarized("base1"))
+		value.SetColor(math32.NewColor("White"))
 		value.SetFont(cp.hudFont)
 		cp.hudValues.Add(value)
 	}
