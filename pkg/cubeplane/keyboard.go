@@ -107,6 +107,12 @@ func (cp *CubePlane) onKey(evname string, ev interface{}) {
 		}
 		cp.updateSelected()
 
+	case window.KeyF:
+		cp.cubeWireframe = !cp.cubeWireframe
+
+	case window.KeyP:
+		// pause
+		fallthrough
 	case window.KeyR:
 		cp.rotate = !cp.rotate
 

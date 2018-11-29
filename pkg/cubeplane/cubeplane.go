@@ -51,6 +51,7 @@ type CubePlane struct {
 	cubeSize          float32
 	cubeInactiveColor *math32.Color
 	cubeActiveColor   *math32.Color
+	cubeWireframe     bool
 
 	cursorX           int64
 	cursorY           int64
@@ -81,7 +82,7 @@ type CubeData struct {
 	active bool
 }
 
-func Init(app *application.Application, cmd string) *CubePlane {
+func Init(app *application.Application, cmd string, refresh int, wireframe bool, size int64, rotations int, pause bool) *CubePlane {
 
 	// Add lights to the scene
 	ambientLight := light.NewAmbient(&math32.Color{1.0, 1.0, 1.0}, 0.8)
@@ -123,9 +124,10 @@ func Init(app *application.Application, cmd string) *CubePlane {
 	// Create cube plane with defaults
 	cp := &CubePlane{
 		app:                app,
-		size:               int64(20),
-		secondsPerRotation: float32(30),
+		size:               int64(size),
+		secondsPerRotation: float32(rotations),
 		cubeSize:           float32(.5),
+		cubeWireframe:      wireframe,
 		cubeInactiveColor:  math32.NewColorHex(0x50596C),
 		cubeActiveColor:    math32.NewColorHex(0x608E93),
 		backgroundColor:    math32.NewColorHex(0x2F2D3E),
@@ -136,8 +138,8 @@ func Init(app *application.Application, cmd string) *CubePlane {
 		},
 		command:           cmd,
 		rc:                core.NewRaycaster(&math32.Vector3{}, &math32.Vector3{}),
-		rotate:            true,
-		UpdateChan:        make(CubeUpdateChan, 500),
+		rotate:            !pause,
+		UpdateChan:        make(CubeUpdateChan, 1024),
 		selectedHeaderIdx: -1,
 	}
 
@@ -168,7 +170,7 @@ func Init(app *application.Application, cmd string) *CubePlane {
 	cp.selected = cp.plane[0][0]
 	cp.initHud()
 
-	app.SetInterval(time.Duration(5*time.Second), nil, cp.updatePlane)
+	app.SetInterval(time.Duration(refresh)*time.Second, nil, cp.updatePlane)
 
 	return cp
 }
@@ -327,6 +329,7 @@ func (cp *CubePlane) updateCubeStatus(node *core.Node) {
 		EmissiveColor() math32.Color
 		SetEmissiveColor(*math32.Color)
 		SetColor(*math32.Color)
+		SetWireframe(bool)
 	}
 	ig := node.Children()[0].(graphic.IGraphic)
 	gr := ig.GetGraphic()
@@ -346,6 +349,8 @@ func (cp *CubePlane) updateCubeStatus(node *core.Node) {
 			value = math.Log10(value)
 		}
 
+		imesh.SetWireframe(cp.cubeWireframe)
+
 		if float32(value) >= .5 {
 			gr.SetMatrix(math32.NewMatrix4().MakeTranslation(0, 0, float32(value)/4))
 			gr.SetScaleZ(float32(value))
@@ -355,6 +360,7 @@ func (cp *CubePlane) updateCubeStatus(node *core.Node) {
 		}
 
 	} else {
+		imesh.SetWireframe(cp.cubeWireframe)
 		imesh.SetColor(cp.cubeInactiveColor)
 	}
 }
@@ -373,7 +379,7 @@ func (cp *CubePlane) initCubePlane() {
 			node := core.NewNode()
 			cube := geometry.NewCube(cp.cubeSize)
 			mat := material.NewPhong(cp.cubeInactiveColor)
-			//mat.SetWireframe(true)
+			mat.SetWireframe(cp.cubeWireframe)
 			mesh := graphic.NewMesh(cube, mat)
 
 			// XXX: pre-scale cubes so when they're scaled they all line up

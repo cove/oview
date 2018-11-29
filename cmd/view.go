@@ -39,13 +39,22 @@ var viewCmd = &cobra.Command{
 }
 
 var (
-	profile bool
+	profile   bool
+	refresh   = 5
+	wireframe bool
+	size      = int64(20)
+	rotation  = 32
+	pause     bool
 )
 
 func init() {
 	rootCmd.AddCommand(viewCmd)
-	viewCmd.Flags().BoolVar(&profile, "profile", false, "profile CPU and memory usage")
-
+	viewCmd.Flags().BoolVar(&profile, "profile", profile, "Profile CPU and memory usage")
+	viewCmd.PersistentFlags().Int64Var(&size, "size", size, "Size of cube plane")
+	viewCmd.PersistentFlags().IntVar(&refresh, "refresh", refresh, "Refresh data in seconds")
+	viewCmd.PersistentFlags().IntVar(&rotation, "rotations", rotation, "How many seconds each rotation takes")
+	viewCmd.PersistentFlags().BoolVar(&pause, "pause", pause, "Start up with rotation paused to improve performance")
+	viewCmd.PersistentFlags().BoolVar(&wireframe, "wireframe", wireframe, "Render cubes as wireframes to improve performance")
 }
 
 func cmdView(cmd *cobra.Command, args []string) {
@@ -65,7 +74,14 @@ func cmdView(cmd *cobra.Command, args []string) {
 		Height: 600,
 	})
 
-	cp := cubeplane.Init(app, strings.Join(args, " "))
+	cp := cubeplane.Init(
+		app,
+		strings.Join(args, " "),
+		refresh,
+		wireframe,
+		size,
+		rotation,
+		pause)
 	go PollCmd(args[0], strings.Join(args[1:], " "), cp)
 
 	app.Run()
