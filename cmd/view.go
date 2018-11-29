@@ -59,7 +59,7 @@ func init() {
 	viewCmd.PersistentFlags().IntVarP(&rotation, "rotations", "r", rotation, "How many seconds each rotation takes")
 	viewCmd.PersistentFlags().BoolVarP(&pause, "pause", "p", pause, "Start up with rotation paused to improve performance")
 	viewCmd.PersistentFlags().BoolVarP(&wireframe, "wireframe", "w", wireframe, "Render cubes as wireframes to improve performance")
-	viewCmd.PersistentFlags().StringVarP(&file, "file", "f", "-", "Load data from file or use '-' to read from stdin")
+	viewCmd.PersistentFlags().StringVarP(&file, "file", "f", file, "Load data from file or use '-' to read from stdin")
 	viewCmd.PersistentFlags().StringVarP(&command, "command", "c", command, "Command to run to get data from")
 
 }
@@ -69,6 +69,13 @@ func cmdView(cmd *cobra.Command, args []string) {
 	if profile {
 		fmt.Println("PROFILING")
 		defer profile2.Start(profile2.MemProfile).Stop()
+	}
+
+	// validate command line args
+	if file == "" && command == "" {
+		fmt.Fprintln(os.Stderr, "Please specify either -f or -c to load data")
+		cmd.Usage()
+		os.Exit(-1)
 	}
 
 	app, _ := application.Create(application.Options{
@@ -88,7 +95,7 @@ func cmdView(cmd *cobra.Command, args []string) {
 
 	if command != "" {
 		go PollCmd(command, strings.Join(args[1:], " "), cp)
-	} else {
+	} else if file != "" {
 		go PollFile(file, cp)
 	}
 
