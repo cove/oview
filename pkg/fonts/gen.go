@@ -31,6 +31,7 @@ func main() {
 		"Orbitron/Orbitron-Medium.ttf",
 		"Orbitron/Orbitron-Bold.ttf",
 		"Orbitron/Orbitron-Black.ttf",
+		"Sun/gallant12x22.ttf",
 	}
 
 	out, err := os.Create("fonts.go")
@@ -53,6 +54,7 @@ package fonts
 		name := path.Base(fonts[i])
 		name = strings.TrimSuffix(name, ".ttf")
 		name = strings.Replace(name, "-", "", -1)
+		name = strings.Title(name)
 		fmt.Fprintf(out, "func %s() []byte {\t\n\tb := []byte{\n\t", name)
 
 		bin, _ := ioutil.ReadAll(fd)

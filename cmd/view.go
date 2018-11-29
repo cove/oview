@@ -15,7 +15,6 @@
 package cmd
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"os/exec"
@@ -74,7 +73,6 @@ func cmdView(cmd *cobra.Command, args []string) {
 
 func PollCmd(cmd, args string, cp *cubeplane.CubePlane) {
 
-	var header cubeplane.CubeHeader
 	for {
 		run := exec.Command(cmd, args)
 		stdout, err := run.StdoutPipe()
@@ -86,31 +84,8 @@ func PollCmd(cmd, args string, cp *cubeplane.CubePlane) {
 			panic(err)
 		}
 
-		scanner := bufio.NewScanner(stdout)
-		if ok := scanner.Scan(); !ok {
-			return
-		}
-
-		// XXX assumes first line is header always
-		if header == nil {
-			line := scanner.Text()
-			if txt.IsTableHeader(line) {
-				header = strings.Fields(line)
-				cp.SetHeader(header)
-			}
-		}
-
-		table := cubeplane.CubeUpdate{}
-		for i := 0; scanner.Scan(); i++ {
-			line := scanner.Text()
-			fields := strings.Fields(line)
-			table = append(table, fields)
-
-			if err := scanner.Err(); err != nil {
-				fmt.Fprintln(os.Stderr, "reading standard input:", err)
-				return
-			}
-		}
+		header, table, err := txt.NewTable(stdout)
+		cp.SetHeader(header)
 		cp.UpdateChan <- table
 
 		if err := run.Wait(); err != nil {

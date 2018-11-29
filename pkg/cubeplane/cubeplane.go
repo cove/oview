@@ -24,8 +24,6 @@ import (
 
 	"github.com/g3n/engine/camera/control"
 
-	"github.com/cove/oq/pkg/colors"
-
 	"github.com/g3n/engine/core"
 
 	"github.com/g3n/engine/renderer"
@@ -139,12 +137,12 @@ func Init(app *application.Application, cmd string) *CubePlane {
 		size:               int64(20),
 		secondsPerRotation: float32(30),
 		cubeSize:           float32(.5),
-		cubeInactiveColor:  colors.Solarized("base1"),
-		cubeActiveColor:    colors.Solarized("violet"),
-		backgroundColor:    colors.Solarized("base03"),
-		selectedColor:      colors.Solarized("cyan"),
+		cubeInactiveColor:  math32.NewColorHex(0x50596C),
+		cubeActiveColor:    math32.NewColorHex(0x608E93),
+		backgroundColor:    math32.NewColorHex(0x2F2D3E),
+		selectedColor:      math32.NewColorHex(0x99BAA4),
+		hudTextColor:       math32.NewColorHex(0xFCF2C6),
 		hudTextSize:        float64(12.0),
-		hudTextColor:       colors.Solarized("base0"),
 		command:            cmd,
 		rc:                 core.NewRaycaster(&math32.Vector3{}, &math32.Vector3{}),
 		rotate:             true,
@@ -214,6 +212,7 @@ func (cp *CubePlane) updateSelected() {
 	type matI interface {
 		EmissiveColor() math32.Color
 		SetEmissiveColor(*math32.Color)
+		SetColor(*math32.Color)
 	}
 
 	// Un-highlight previous selection
@@ -384,6 +383,7 @@ func (cp *CubePlane) initCubePlane() {
 			node := core.NewNode()
 			cube := geometry.NewCube(cp.cubeSize)
 			mat := material.NewPhong(cp.cubeInactiveColor)
+			//mat.SetWireframe(true)
 			mesh := graphic.NewMesh(cube, mat)
 
 			// XXX: pre-scale cubes so when they're scaled they all line up

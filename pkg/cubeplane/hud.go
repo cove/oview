@@ -15,6 +15,7 @@
 package cubeplane
 
 import (
+	"path"
 	"strings"
 
 	"github.com/cove/oq/pkg/colors"
@@ -35,7 +36,7 @@ func (cp *CubePlane) initHud() {
 	cp.hudHeaders.Add(cp.hudValues)
 
 	// load font
-	font, err := text.NewFontFromData(fonts.OrbitronRegular())
+	font, err := text.NewFontFromData(fonts.Gallant12x22())
 	if err != nil {
 		panic(err.Error())
 	}
@@ -54,7 +55,7 @@ func (cp *CubePlane) updateHud() {
 	if cp.hudHeaders.Root() == nil {
 		for i := range cp.header {
 			lineSpace := float32(8.0)
-			name := strings.ToLower(cp.header[i])
+			name := cp.header[i]
 			header := gui.NewButton(name)
 			header.SetPosition(20, 20.0+(float32(i)*(float32(cp.hudTextSize)+lineSpace)))
 			header.Label.SetFont(cp.hudFont)
@@ -103,11 +104,23 @@ func (cp *CubePlane) updateHud() {
 	cp.hudValues.DisposeChildren(true)
 	for i := range ud.attrs {
 		lineSpace := float32(8.0)
-		value := gui.NewLabel(ud.attrs[i])
+		name := cleanCommandPaths(ud.attrs[i])
+		value := gui.NewLabel(name)
 		value.SetPosition(110, 20.0+(float32(i)*(float32(cp.hudTextSize)+lineSpace)))
 		value.SetColor(colors.Solarized("base1"))
 		value.SetFont(cp.hudFont)
 		cp.hudValues.Add(value)
 	}
 
+}
+
+func cleanCommandPaths(name string) string {
+	var clean string
+	for _, v := range strings.Split(name, " ") {
+		if !strings.HasPrefix(v, "-") {
+			clean += " " + v
+		}
+	}
+	clean = path.Base(clean)
+	return clean
 }
