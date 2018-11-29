@@ -73,6 +73,7 @@ func cmdView(cmd *cobra.Command, args []string) {
 
 func PollCmd(cmd, args string, cp *cubeplane.CubePlane) {
 
+	needsHeader := true
 	for {
 		run := exec.Command(cmd, args)
 		stdout, err := run.StdoutPipe()
@@ -85,7 +86,10 @@ func PollCmd(cmd, args string, cp *cubeplane.CubePlane) {
 		}
 
 		header, table, err := txt.NewTable(stdout)
-		cp.SetHeader(header)
+		if needsHeader {
+			cp.SetHeader(header)
+			needsHeader = false
+		}
 		cp.UpdateChan <- table
 
 		if err := run.Wait(); err != nil {

@@ -33,7 +33,9 @@ func NewTable(fd io.Reader) ([]string, [][]string, error) {
 		// skip to header
 		if header == nil {
 			if IsTableHeader(line) {
-				header = strings.Fields(line)
+				for _, v := range strings.Fields(line) {
+					header = append(header, strings.TrimSpace(v))
+				}
 			}
 			continue
 		}
