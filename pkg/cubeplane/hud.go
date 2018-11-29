@@ -15,7 +15,6 @@
 package cubeplane
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/cove/oq/pkg/colors"
@@ -63,9 +62,16 @@ func (cp *CubePlane) updateHud() {
 				Over:   gui.ButtonStyle{FgColor: *math32.NewColor4("cyan", 1.0)},
 				Normal: gui.ButtonStyle{FgColor: *colors.Solarized4("base1", 1.0)}},
 			)
+
+			// set an id on the button so we know which one was clicked
+			ud := HudData{attrIdx: i}
+			header.SetUserData(ud)
 			header.Subscribe(gui.OnClick, func(evname string, ev interface{}) {
-				fmt.Printf("button %v OnClick\n", cp.header[i])
+				h := header
+				ud := h.UserData().(HudData)
+				cp.selectedHeaderIdx = ud.attrIdx
 			})
+
 			cp.hudHeaders.Add(header)
 		}
 		cp.hudHeaders.SetTopChild(cp.hudValues)

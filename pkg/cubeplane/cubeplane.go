@@ -16,6 +16,7 @@ package cubeplane
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"time"
 
@@ -55,10 +56,11 @@ type CubePlane struct {
 	cubeInactiveColor *math32.Color
 	cubeActiveColor   *math32.Color
 
-	cursorX       int64
-	cursorY       int64
-	selected      *core.Node
-	selectedColor *math32.Color
+	cursorX           int64
+	cursorY           int64
+	selected          *core.Node
+	selectedColor     *math32.Color
+	selectedHeaderIdx int
 
 	backgroundColor *math32.Color
 
@@ -79,13 +81,16 @@ type CubePlane struct {
 type CubeUpdateChan chan CubeUpdate
 type CubeUpdate [][]string
 type CubeHeader []string
-
 type CubeData struct {
 	attrs  []string
 	locX   int64
 	locY   int64
 	ttl    int64
 	active bool
+}
+
+type HudData struct {
+	attrIdx int
 }
 
 func Init(app *application.Application, cmd string) *CubePlane {
@@ -143,6 +148,7 @@ func Init(app *application.Application, cmd string) *CubePlane {
 		rc:                 core.NewRaycaster(&math32.Vector3{}, &math32.Vector3{}),
 		rotate:             true,
 		UpdateChan:         make(CubeUpdateChan, 500),
+		selectedHeaderIdx:  -1,
 	}
 
 	// Sets window background color
@@ -168,12 +174,28 @@ func Init(app *application.Application, cmd string) *CubePlane {
 	})
 
 	cp.initCubePlane()
+	cp.selected = cp.plane[0][0]
+
 	cp.initHud()
 
 	app.SetInterval(time.Duration(5*time.Second), nil,
 		func(i interface{}) {
 			select {
 			case table := <-cp.UpdateChan:
+
+				// forward the value we use to scale the cubes to a number
+				// since we can have non-number too
+				if cp.selectedHeaderIdx < 0 {
+					for i, v := range table[0] {
+						if _, err := strconv.ParseFloat(v, 64); err == nil {
+							cp.selectedHeaderIdx = i
+							break
+						}
+					}
+				}
+				cp.updateHud()
+
+				// update cube plane
 				cp.CullExpiredCubes()
 				for i := range table {
 					cp.Update(table[i][1], table[i])
@@ -322,12 +344,19 @@ func (cp *CubePlane) updateCubeStatus(node *core.Node) {
 		ud := node.UserData().(CubeData)
 		imesh.SetColor(cp.cubeActiveColor)
 
-		cpu, _ := strconv.ParseFloat(ud.attrs[2], 64)
-		cpu /= 10
+		value, err := strconv.ParseFloat(ud.attrs[cp.selectedHeaderIdx], 64)
+		if err != nil {
+			panic(err)
+		}
 
-		if float32(cpu) >= .5 {
-			gr.SetMatrix(math32.NewMatrix4().MakeTranslation(0, 0, float32(cpu)/4))
-			gr.SetScaleZ(float32(cpu))
+		// scale to log if the value is too much larger than our cube
+		if value > 2*float64(cp.size) {
+			value = math.Log10(value)
+		}
+
+		if float32(value) >= .5 {
+			gr.SetMatrix(math32.NewMatrix4().MakeTranslation(0, 0, float32(value)/4))
+			gr.SetScaleZ(float32(value))
 		} else {
 			gr.SetMatrix(math32.NewMatrix4().MakeTranslation(0, 0, float32(cp.cubeSize)/4))
 			gr.SetScaleZ(float32(cp.cubeSize))
