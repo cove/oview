@@ -15,7 +15,9 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -45,23 +47,24 @@ var (
 	size      = int64(20)
 	rotation  = 32
 	pause     bool
+	file      string
+	command   string
 )
 
 func init() {
 	rootCmd.AddCommand(viewCmd)
 	viewCmd.Flags().BoolVar(&profile, "profile", profile, "Profile CPU and memory usage")
-	viewCmd.PersistentFlags().Int64Var(&size, "size", size, "Size of cube plane")
-	viewCmd.PersistentFlags().IntVar(&refresh, "refresh", refresh, "Refresh data in seconds")
-	viewCmd.PersistentFlags().IntVar(&rotation, "rotations", rotation, "How many seconds each rotation takes")
-	viewCmd.PersistentFlags().BoolVar(&pause, "pause", pause, "Start up with rotation paused to improve performance")
-	viewCmd.PersistentFlags().BoolVar(&wireframe, "wireframe", wireframe, "Render cubes as wireframes to improve performance")
+	viewCmd.PersistentFlags().Int64VarP(&size, "size", "s", size, "Size of cube plane")
+	viewCmd.PersistentFlags().IntVarP(&refresh, "interval", "i", refresh, "Refresh data interval in seconds")
+	viewCmd.PersistentFlags().IntVarP(&rotation, "rotations", "r", rotation, "How many seconds each rotation takes")
+	viewCmd.PersistentFlags().BoolVarP(&pause, "pause", "p", pause, "Start up with rotation paused to improve performance")
+	viewCmd.PersistentFlags().BoolVarP(&wireframe, "wireframe", "w", wireframe, "Render cubes as wireframes to improve performance")
+	viewCmd.PersistentFlags().StringVarP(&file, "file", "f", "-", "Load data from file or use '-' to read from stdin")
+	viewCmd.PersistentFlags().StringVarP(&command, "command", "c", command, "Command to run to get data from")
+
 }
 
 func cmdView(cmd *cobra.Command, args []string) {
-	if len(args) < 1 {
-		cmd.Usage()
-		os.Exit(1)
-	}
 
 	if profile {
 		fmt.Println("PROFILING")
@@ -82,7 +85,12 @@ func cmdView(cmd *cobra.Command, args []string) {
 		size,
 		rotation,
 		pause)
-	go PollCmd(args[0], strings.Join(args[1:], " "), cp)
+
+	if command != "" {
+		go PollCmd(command, strings.Join(args[1:], " "), cp)
+	} else {
+		go PollFile(file, cp)
+	}
 
 	app.Run()
 }
@@ -112,5 +120,31 @@ func PollCmd(cmd, args string, cp *cubeplane.CubePlane) {
 			panic(err)
 		}
 		time.Sleep(5 * time.Second)
+	}
+}
+
+func PollFile(file string, cp *cubeplane.CubePlane) {
+	needsHeader := true
+	for {
+		var input io.Reader
+		var fd *os.File
+		if file == "-" {
+			input = bufio.NewReader(os.Stdin)
+		} else {
+			fd, err := os.Open(file)
+			if err != nil {
+				panic(err)
+			}
+			input = bufio.NewReader(fd)
+		}
+
+		header, table, _ := text2table.NewTable(input)
+		if needsHeader {
+			cp.SetHeader(header)
+			needsHeader = false
+		}
+		cp.UpdateChan <- table
+
+		fd.Close()
 	}
 }
