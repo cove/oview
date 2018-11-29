@@ -15,8 +15,85 @@
 package txt
 
 import (
+	"bufio"
+	"io"
+	"strings"
 	"unicode"
 )
+
+func NewTable(fd io.Reader) ([]string, [][]string, error) {
+
+	var table [][]string
+	var header []string
+
+	scanner := bufio.NewScanner(fd)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// skip to header
+		if header == nil {
+			if IsTableHeader(line) {
+				header = strings.Fields(line)
+			}
+			continue
+		}
+
+		fields := strings.Fields(line)
+
+		if len(fields) > len(header) {
+			// concat trailing fields to last column
+			// (e.g. a process name with spaces in it)
+			cat1 := fields[len(header)-1:]
+			cat2 := strings.Join(cat1, " ")
+			catFields := append(fields[0:len(header)-1], cat2)
+			table = append(table, catFields)
+		} else if len(fields) == len(header) {
+			// normal line matches up with header
+			table = append(table, fields)
+		} else {
+			// incomplete line
+			continue
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, nil, err
+	}
+
+	return header, table, nil
+}
+
+func findFirstUniqueValuedColumn(table [][]string) int {
+
+	uniqueColumn := -1
+	for x := range table[0] {
+		previous := ""
+		for y := range table {
+			if IsTableHeader(strings.Join(table[y], " ")) {
+				continue
+			}
+
+			if table[y] == nil {
+				break
+			}
+
+			if previous == "" {
+				previous = table[y][x]
+			} else if previous != table[y][x] {
+				uniqueColumn = x
+			} else {
+				uniqueColumn = -1
+				break
+			}
+		}
+
+		if uniqueColumn != -1 {
+			break
+		}
+	}
+
+	return uniqueColumn
+}
 
 func IsTableHeader(s string) bool {
 	score := 0.0

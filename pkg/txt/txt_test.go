@@ -15,8 +15,37 @@
 package txt
 
 import (
+	"io"
+	"os"
 	"testing"
 )
+
+func TestNewTable(t *testing.T) {
+	psdata, _ := os.Open("testdata/ps-aux-osx.txt")
+
+	type args struct {
+		fd io.Reader
+	}
+	tests := []struct {
+		name string
+		args args
+		want error
+	}{
+		{
+			name: "ps aux header",
+			args: args{fd: psdata},
+			want: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, _, err := NewTable(tt.args.fd)
+			if err != tt.want {
+				t.Errorf("isTableHeader() = %v, want %v", err, tt.want)
+			}
+		})
+	}
+}
 
 func Test_isTableHeader(t *testing.T) {
 	type args struct {

@@ -17,15 +17,13 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
-	"runtime"
-	"runtime/pprof"
 	"strings"
 	"time"
 
 	"github.com/cove/oq/pkg/txt"
+	profile2 "github.com/pkg/profile"
 
 	"github.com/cove/oq/pkg/cubeplane"
 
@@ -52,45 +50,26 @@ func init() {
 }
 
 func cmdView(cmd *cobra.Command, args []string) {
+	if len(args) < 1 {
+		cmd.Usage()
+		os.Exit(1)
+	}
+
+	if profile {
+		fmt.Println("PROFILING")
+		defer profile2.Start(profile2.MemProfile).Stop()
+	}
+
 	app, _ := application.Create(application.Options{
 		Title:  "oq",
 		Width:  800,
 		Height: 600,
 	})
 
-	if len(args) < 1 {
-		cmd.Usage()
-		os.Exit(1)
-	}
-
 	cp := cubeplane.Init(app, strings.Join(args, " "))
 	go PollCmd(args[0], strings.Join(args[1:], " "), cp)
 
-	if profile {
-		fmt.Println("PROFILING")
-		f, err := os.Create("profilecpu.prof")
-		if err != nil {
-			log.Fatal("could not create CPU profile: ", err)
-		}
-		if err := pprof.StartCPUProfile(f); err != nil {
-			log.Fatal("could not start CPU profile: ", err)
-		}
-		defer pprof.StopCPUProfile()
-	}
-
 	app.Run()
-
-	if profile {
-		f, err := os.Create("profilemem.prof")
-		if err != nil {
-			log.Fatal("could not create memory profile: ", err)
-		}
-		runtime.GC() // get up-to-date statistics
-		if err := pprof.WriteHeapProfile(f); err != nil {
-			log.Fatal("could not write memory profile: ", err)
-		}
-		f.Close()
-	}
 }
 
 func PollCmd(cmd, args string, cp *cubeplane.CubePlane) {

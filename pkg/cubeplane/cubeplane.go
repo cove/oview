@@ -64,8 +64,9 @@ type CubePlane struct {
 
 	hudTextSize  float64
 	hudTextColor *math32.Color
-	hudPanel     *gui.Panel
 	hudFont      *text.Font
+	hudHeaders   *gui.Panel
+	hudValues    *gui.Panel
 
 	rc      *core.Raycaster
 	command string

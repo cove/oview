@@ -16,7 +16,6 @@ package cubeplane
 
 import (
 	"fmt"
-	"path"
 	"strings"
 
 	"github.com/cove/oq/pkg/colors"
@@ -28,23 +27,15 @@ import (
 
 func (cp *CubePlane) initHud() {
 
-	// panel
-	panel := gui.NewPanel(230, 200)
-	// XXX keep invisable, for later use
-	panel.SetVisible(false)
-	panel.SetContentSize(200, 190)
-	panel.SetPosition(20, 20)
-	style := gui.PanelStyle{
-		Margin:      gui.RectBounds{0, 0, 0, 0},
-		Border:      gui.RectBounds{1, 1, 1, 1},
-		Padding:     gui.RectBounds{8, 8, 8, 8},
-		BorderColor: *colors.Solarized4("cyan", .2),
-		BgColor:     math32.Color4{0, 0, 0, .2},
-	}
-	panel.ApplyStyle(&style)
-	cp.hudPanel = panel
+	cp.hudHeaders = gui.NewPanel(600, 900)
+	cp.hudHeaders.SetPosition(10, 10)
+	//cp.hudHeaders.SetBorders(1, 1, 1, 1)
 
-	// font
+	cp.hudValues = gui.NewPanel(600, 900)
+	//cp.hudValues.SetBorders(1, 1, 1, 1)
+	cp.hudHeaders.Add(cp.hudValues)
+
+	// load font
 	font, err := text.NewFontFromData(fonts.OrbitronRegular())
 	if err != nil {
 		panic(err.Error())
@@ -55,45 +46,47 @@ func (cp *CubePlane) initHud() {
 	font.SetFgColor(&math32.Color4{0, 0, 1, 1})
 	font.SetBgColor(&math32.Color4{1, 1, 0, 0.8})
 	cp.hudFont = font
+
 }
 
 func (cp *CubePlane) updateHud() {
-	cp.app.Gui().GetPanel().RemoveAll(true)
-	cp.app.Gui().GetPanel().Add(cp.hudPanel)
 
-	node := cp.plane[cp.cursorX][cp.cursorY]
-	d := node.UserData().(CubeData)
-	if d.attrs != nil {
+	// add headers
+	if cp.hudHeaders.Root() == nil {
 		for i := range cp.header {
-
 			lineSpace := float32(8.0)
-
-			// heading
-			heading := gui.NewButton(strings.ToLower(cp.header[i]))
-			heading.SetPosition(20, 20.0+(float32(i)*(float32(cp.hudTextSize)+lineSpace)))
-			heading.Label.SetFont(cp.hudFont)
-			heading.SetStyles(&gui.ButtonStyles{
+			name := strings.ToLower(cp.header[i])
+			header := gui.NewButton(name)
+			header.SetPosition(20, 20.0+(float32(i)*(float32(cp.hudTextSize)+lineSpace)))
+			header.Label.SetFont(cp.hudFont)
+			header.SetStyles(&gui.ButtonStyles{
 				Over:   gui.ButtonStyle{FgColor: *math32.NewColor4("cyan", 1.0)},
 				Normal: gui.ButtonStyle{FgColor: *colors.Solarized4("base1", 1.0)}},
 			)
-			heading.Subscribe(gui.OnClick, func(evname string, ev interface{}) {
+			header.Subscribe(gui.OnClick, func(evname string, ev interface{}) {
 				fmt.Printf("button %v OnClick\n", cp.header[i])
 			})
-			cp.app.Gui().GetPanel().Add(heading)
-
-			// values
-			basename := path.Base(d.attrs[i]) // everything gets basenamed
-			values := gui.NewButton(basename)
-			values.SetPosition(110, 20.0+(float32(i)*(float32(cp.hudTextSize)+lineSpace)))
-			values.Label.SetFont(cp.hudFont)
-			values.SetStyles(&gui.ButtonStyles{
-				Over:   gui.ButtonStyle{FgColor: *math32.NewColor4("cyan", 1.0)},
-				Normal: gui.ButtonStyle{FgColor: *colors.Solarized4("base2", 1.0)}},
-			)
-			values.Subscribe(gui.OnClick, func(evname string, ev interface{}) {
-				fmt.Printf("button %v OnClick\n", cp.header[i])
-			})
-			cp.app.Gui().GetPanel().Add(values)
+			cp.hudHeaders.Add(header)
 		}
+		cp.hudHeaders.SetTopChild(cp.hudValues)
+		cp.app.Gui().Add(cp.hudHeaders)
 	}
+
+	// add values
+	node := cp.plane[cp.cursorX][cp.cursorY]
+	ud := node.UserData().(CubeData)
+	if ud.attrs == nil {
+		return
+	}
+
+	cp.hudValues.DisposeChildren(true)
+	for i := range ud.attrs {
+		lineSpace := float32(8.0)
+		value := gui.NewLabel(ud.attrs[i])
+		value.SetPosition(110, 20.0+(float32(i)*(float32(cp.hudTextSize)+lineSpace)))
+		value.SetColor(colors.Solarized("base1"))
+		value.SetFont(cp.hudFont)
+		cp.hudValues.Add(value)
+	}
+
 }
