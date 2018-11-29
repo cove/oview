@@ -68,13 +68,13 @@ func (cp *CubePlane) updateHud() {
 			header.SetUserData(ud)
 
 			header.Subscribe(gui.OnClick, func(evname string, ev interface{}) {
-				//if cp.selectedHeaderIdx > -1 {
-				//	unselected := cp.hubHeaderButtons[cp.selectedHeaderIdx]
-				//	unselected.SetStyles(&gui.ButtonStyles{
-				//		Over:   gui.ButtonStyle{FgColor: *math32.NewColor4("cyan", 1.0)},
-				//		Normal: gui.ButtonStyle{FgColor: *math32.NewColor4("base1", 1.0)},
-				//	})
-				//}
+				if cp.selectedHeaderIdx > -1 {
+					unselected := cp.hubHeaderButtons[cp.selectedHeaderIdx]
+					unselected.SetStyles(&gui.ButtonStyles{
+						Over:   gui.ButtonStyle{FgColor: *math32.NewColor4("cyan", 1.0)},
+						Normal: gui.ButtonStyle{FgColor: *colors.Solarized4("base1", 1.0)},
+					})
+				}
 
 				selected := header
 				selected.SetStyles(&gui.ButtonStyles{

@@ -175,6 +175,8 @@ func Init(app *application.Application, cmd string) *CubePlane {
 	})
 
 	cp.initCubePlane()
+
+	// select first cube to start
 	cp.selected = cp.plane[0][0]
 
 	cp.initHud()
@@ -184,8 +186,7 @@ func Init(app *application.Application, cmd string) *CubePlane {
 			select {
 			case table := <-cp.UpdateChan:
 
-				// forward the value we use to scale the cubes to a number
-				// since we can have non-number too
+				// use first value that's a number for scaling cubes
 				if cp.selectedHeaderIdx < 0 {
 					for i, v := range table[0] {
 						if _, err := strconv.ParseFloat(v, 64); err == nil {
@@ -193,10 +194,11 @@ func Init(app *application.Application, cmd string) *CubePlane {
 							break
 						}
 					}
+					if cp.selectedHeaderIdx < 0 {
+						panic("no numbers found to scale cubes with")
+					}
 				}
 				cp.updateHud()
-
-				// update cube plane
 				cp.CullExpiredCubes()
 				for i := range table {
 					cp.Update(table[i][1], table[i])
@@ -401,4 +403,5 @@ func (cp *CubePlane) initCubePlane() {
 			cp.plane[x][y] = node
 		}
 	}
+
 }
