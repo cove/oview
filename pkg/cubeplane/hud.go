@@ -60,18 +60,33 @@ func (cp *CubePlane) updateHud() {
 			header.Label.SetFont(cp.hudFont)
 			header.SetStyles(&gui.ButtonStyles{
 				Over:   gui.ButtonStyle{FgColor: *math32.NewColor4("cyan", 1.0)},
-				Normal: gui.ButtonStyle{FgColor: *colors.Solarized4("base1", 1.0)}},
-			)
+				Normal: gui.ButtonStyle{FgColor: *colors.Solarized4("base1", 1.0)},
+			})
 
 			// set an id on the button so we know which one was clicked
 			ud := HudData{attrIdx: i}
 			header.SetUserData(ud)
+
 			header.Subscribe(gui.OnClick, func(evname string, ev interface{}) {
-				h := header
-				ud := h.UserData().(HudData)
+				//if cp.selectedHeaderIdx > -1 {
+				//	unselected := cp.hubHeaderButtons[cp.selectedHeaderIdx]
+				//	unselected.SetStyles(&gui.ButtonStyles{
+				//		Over:   gui.ButtonStyle{FgColor: *math32.NewColor4("cyan", 1.0)},
+				//		Normal: gui.ButtonStyle{FgColor: *math32.NewColor4("base1", 1.0)},
+				//	})
+				//}
+
+				selected := header
+				selected.SetStyles(&gui.ButtonStyles{
+					Over:   gui.ButtonStyle{FgColor: *math32.NewColor4("yellow", 1.0)},
+					Normal: gui.ButtonStyle{FgColor: *math32.NewColor4("white", 1.0)},
+				})
+				ud := selected.UserData().(HudData)
 				cp.selectedHeaderIdx = ud.attrIdx
+
 			})
 
+			cp.hubHeaderButtons = append(cp.hubHeaderButtons, header)
 			cp.hudHeaders.Add(header)
 		}
 		cp.hudHeaders.SetTopChild(cp.hudValues)

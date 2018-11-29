@@ -64,11 +64,12 @@ type CubePlane struct {
 
 	backgroundColor *math32.Color
 
-	hudTextSize  float64
-	hudTextColor *math32.Color
-	hudFont      *text.Font
-	hudHeaders   *gui.Panel
-	hudValues    *gui.Panel
+	hudTextSize      float64
+	hudTextColor     *math32.Color
+	hudFont          *text.Font
+	hudHeaders       *gui.Panel
+	hudValues        *gui.Panel
+	hubHeaderButtons []*gui.Button
 
 	rc      *core.Raycaster
 	command string
@@ -346,7 +347,7 @@ func (cp *CubePlane) updateCubeStatus(node *core.Node) {
 
 		value, err := strconv.ParseFloat(ud.attrs[cp.selectedHeaderIdx], 64)
 		if err != nil {
-			panic(err)
+			return
 		}
 
 		// scale to log if the value is too much larger than our cube
