@@ -41,34 +41,27 @@ import (
 )
 
 type CubePlane struct {
-	app *application.Application
-
+	app                *application.Application
 	plane              [][]*core.Node
 	size               int64
 	secondsPerRotation float32
 	ttl                int64
-
-	cubeSize          float32
-	cubeInactiveColor *math32.Color
-	cubeActiveColor   *math32.Color
-	cubeWireframe     bool
-
-	cursorX           int64
-	cursorY           int64
-	selected          *core.Node
-	selectedColor     *math32.Color
-	selectedHeaderIdx int
-
-	backgroundColor *math32.Color
-
-	hud *Hud
-
-	rc      *core.Raycaster
-	command string
-	header  []string
-	rotate  bool
-
-	UpdateChan CubeUpdateChan
+	cubeSize           float32
+	cubeInactiveColor  *math32.Color
+	cubeActiveColor    *math32.Color
+	cubeWireframe      bool
+	cursorX            int64
+	cursorY            int64
+	selected           *core.Node
+	selectedColor      *math32.Color
+	selectedHeaderIdx  int
+	backgroundColor    *math32.Color
+	hud                *Hud
+	rc                 *core.Raycaster
+	command            string
+	header             []string
+	rotate             bool
+	UpdateChan         CubeUpdateChan
 }
 
 type CubeUpdateChan chan CubeUpdate
@@ -166,16 +159,17 @@ func Init(app *application.Application, cmd string, refresh int, wireframe bool,
 	})
 
 	cp.initCubePlane()
+
 	// select first cube to start
 	cp.selected = cp.plane[0][0]
 	cp.initHud()
 
-	app.SetInterval(time.Duration(refresh)*time.Second, nil, cp.updatePlane)
+	app.SetInterval(time.Duration(refresh)*time.Second, nil, cp.processPlaneUpdates)
 
 	return cp
 }
 
-func (cp *CubePlane) updatePlane(i interface{}) {
+func (cp *CubePlane) processPlaneUpdates(i interface{}) {
 	select {
 	case table := <-cp.UpdateChan:
 
@@ -192,9 +186,9 @@ func (cp *CubePlane) updatePlane(i interface{}) {
 			}
 		}
 		cp.updateHud()
-		cp.CullExpiredCubes()
+		cp.cullExpiredCubes()
 		for i := range table {
-			cp.Update(table[i][1], table[i])
+			cp.updatePlane(table[i][1], table[i])
 		}
 	}
 }
@@ -228,7 +222,7 @@ func (cp *CubePlane) updateSelected() {
 	cp.updateHud()
 }
 
-func (cp *CubePlane) Update(id string, attrs []string) {
+func (cp *CubePlane) updatePlane(id string, attrs []string) {
 
 	for j := range cp.plane {
 		for i := range cp.plane {
@@ -270,7 +264,7 @@ func (cp *CubePlane) Update(id string, attrs []string) {
 
 }
 
-func (cp *CubePlane) CullExpiredCubes() {
+func (cp *CubePlane) cullExpiredCubes() {
 	for x := range cp.plane {
 		for y := range cp.plane {
 			node := cp.plane[x][y]

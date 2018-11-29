@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cove/oq/pkg/txt"
+	"github.com/cove/oq/pkg/text2table"
 	profile2 "github.com/pkg/profile"
 
 	"github.com/cove/oq/pkg/cubeplane"
@@ -101,7 +101,7 @@ func PollCmd(cmd, args string, cp *cubeplane.CubePlane) {
 			panic(err)
 		}
 
-		header, table, err := txt.NewTable(stdout)
+		header, table, err := text2table.NewTable(stdout)
 		if needsHeader {
 			cp.SetHeader(header)
 			needsHeader = false
