@@ -24,15 +24,28 @@ import (
 	"github.com/g3n/engine/text"
 )
 
+type Hud struct {
+	textSize  float64
+	textColor *math32.Color
+	font      *text.Font
+	headers   *gui.Panel
+	values    *gui.Panel
+	buttons   []*gui.Button
+}
+
+type HudData struct {
+	attrIdx int
+}
+
 func (cp *CubePlane) initHud() {
 
-	cp.hudHeaders = gui.NewPanel(600, 900)
-	cp.hudHeaders.SetPosition(10, 10)
-	//cp.hudHeaders.SetBorders(1, 1, 1, 1)
+	cp.hud.headers = gui.NewPanel(600, 900)
+	cp.hud.headers.SetPosition(10, 10)
+	//cp.hud.headers.SetBorders(1, 1, 1, 1)
 
-	cp.hudValues = gui.NewPanel(600, 900)
-	//cp.hudValues.SetBorders(1, 1, 1, 1)
-	cp.hudHeaders.Add(cp.hudValues)
+	cp.hud.values = gui.NewPanel(600, 900)
+	//cp.hud.values.SetBorders(1, 1, 1, 1)
+	cp.hud.headers.Add(cp.hud.values)
 
 	// load font
 	font, err := text.NewFontFromData(fonts.Gallant12x22())
@@ -40,24 +53,24 @@ func (cp *CubePlane) initHud() {
 		panic(err.Error())
 	}
 	font.SetLineSpacing(1.0)
-	font.SetPointSize(cp.hudTextSize)
+	font.SetPointSize(cp.hud.textSize)
 	font.SetDPI(72)
 	font.SetFgColor(&math32.Color4{0, 0, 1, 1})
 	font.SetBgColor(&math32.Color4{1, 1, 0, 0.8})
-	cp.hudFont = font
+	cp.hud.font = font
 
 }
 
 func (cp *CubePlane) updateHud() {
 
 	// add headers
-	if cp.hudHeaders.Root() == nil {
+	if cp.hud.headers.Root() == nil {
 		for i := range cp.header {
 			lineSpace := float32(8.0)
 			name := cp.header[i]
 			header := gui.NewButton(name)
-			header.SetPosition(20, 20.0+(float32(i)*(float32(cp.hudTextSize)+lineSpace)))
-			header.Label.SetFont(cp.hudFont)
+			header.SetPosition(20, 20.0+(float32(i)*(float32(cp.hud.textSize)+lineSpace)))
+			header.Label.SetFont(cp.hud.font)
 			header.SetStyles(&gui.ButtonStyles{
 				Over:   gui.ButtonStyle{FgColor: *math32.NewColor4("Gold", 1.0)},
 				Normal: gui.ButtonStyle{FgColor: *math32.NewColor4("White", 1.0)},
@@ -69,7 +82,7 @@ func (cp *CubePlane) updateHud() {
 
 			header.Subscribe(gui.OnClick, func(evname string, ev interface{}) {
 				if cp.selectedHeaderIdx > -1 {
-					unselected := cp.hubHeaderButtons[cp.selectedHeaderIdx]
+					unselected := cp.hud.buttons[cp.selectedHeaderIdx]
 					unselected.SetStyles(&gui.ButtonStyles{
 						Over:   gui.ButtonStyle{FgColor: *math32.NewColor4("Gold", 1.0)},
 						Normal: gui.ButtonStyle{FgColor: *math32.NewColor4("White", 1.0)},
@@ -86,11 +99,11 @@ func (cp *CubePlane) updateHud() {
 
 			})
 
-			cp.hubHeaderButtons = append(cp.hubHeaderButtons, header)
-			cp.hudHeaders.Add(header)
+			cp.hud.buttons = append(cp.hud.buttons, header)
+			cp.hud.headers.Add(header)
 		}
-		cp.hudHeaders.SetTopChild(cp.hudValues)
-		cp.app.Gui().Add(cp.hudHeaders)
+		cp.hud.headers.SetTopChild(cp.hud.values)
+		cp.app.Gui().Add(cp.hud.headers)
 	}
 
 	// add values
@@ -101,15 +114,15 @@ func (cp *CubePlane) updateHud() {
 	}
 
 	// display updated values
-	cp.hudValues.DisposeChildren(true)
+	cp.hud.values.DisposeChildren(true)
 	for i := range ud.attrs {
 		lineSpace := float32(8.0)
 		name := cleanCommandPaths(ud.attrs[i])
 		value := gui.NewLabel(name)
-		value.SetPosition(110, 20.0+(float32(i)*(float32(cp.hudTextSize)+lineSpace)))
+		value.SetPosition(110, 20.0+(float32(i)*(float32(cp.hud.textSize)+lineSpace)))
 		value.SetColor(math32.NewColor("White"))
-		value.SetFont(cp.hudFont)
-		cp.hudValues.Add(value)
+		value.SetFont(cp.hud.font)
+		cp.hud.values.Add(value)
 	}
 
 }

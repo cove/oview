@@ -27,10 +27,6 @@ import (
 
 func main() {
 	fonts := []string{
-		"Orbitron/Orbitron-Regular.ttf",
-		"Orbitron/Orbitron-Medium.ttf",
-		"Orbitron/Orbitron-Bold.ttf",
-		"Orbitron/Orbitron-Black.ttf",
 		"Sun/gallant12x22.ttf",
 	}
 

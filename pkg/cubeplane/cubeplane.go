@@ -20,8 +20,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/g3n/engine/text"
-
 	"github.com/g3n/engine/camera/control"
 
 	"github.com/g3n/engine/core"
@@ -62,12 +60,7 @@ type CubePlane struct {
 
 	backgroundColor *math32.Color
 
-	hudTextSize      float64
-	hudTextColor     *math32.Color
-	hudFont          *text.Font
-	hudHeaders       *gui.Panel
-	hudValues        *gui.Panel
-	hubHeaderButtons []*gui.Button
+	hud *Hud
 
 	rc      *core.Raycaster
 	command string
@@ -86,10 +79,6 @@ type CubeData struct {
 	locY   int64
 	ttl    int64
 	active bool
-}
-
-type HudData struct {
-	attrIdx int
 }
 
 func Init(app *application.Application, cmd string) *CubePlane {
@@ -141,13 +130,15 @@ func Init(app *application.Application, cmd string) *CubePlane {
 		cubeActiveColor:    math32.NewColorHex(0x608E93),
 		backgroundColor:    math32.NewColorHex(0x2F2D3E),
 		selectedColor:      math32.NewColorHex(0x99BAA4),
-		hudTextColor:       math32.NewColorHex(0xFCF2C6),
-		hudTextSize:        float64(12.0),
-		command:            cmd,
-		rc:                 core.NewRaycaster(&math32.Vector3{}, &math32.Vector3{}),
-		rotate:             true,
-		UpdateChan:         make(CubeUpdateChan, 500),
-		selectedHeaderIdx:  -1,
+		hud: &Hud{
+			textColor: math32.NewColorHex(0xFCF2C6),
+			textSize:  float64(12.0),
+		},
+		command:           cmd,
+		rc:                core.NewRaycaster(&math32.Vector3{}, &math32.Vector3{}),
+		rotate:            true,
+		UpdateChan:        make(CubeUpdateChan, 500),
+		selectedHeaderIdx: -1,
 	}
 
 	// Sets window background color
