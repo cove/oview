@@ -104,33 +104,49 @@ func cmdView(cmd *cobra.Command, args []string) {
 
 func PollCmd(cmd, args string, cp *cubeplane.CubePlane) {
 
+	failed := func(err error) {
+		fmt.Fprintf(os.Stderr, "Command failed to run command %s %s: %s\n", cmd, args, err)
+		time.Sleep(5 * time.Second)
+	}
+
 	needsHeader := true
 	for {
 		run := exec.Command(cmd, args)
 		stdout, err := run.StdoutPipe()
 		if err != nil {
-			panic(err)
+			failed(err)
+			continue
 		}
 
 		if err := run.Start(); err != nil {
-			panic(err)
+			failed(err)
+			continue
 		}
 
 		header, table, err := text2table.NewTable(stdout)
+		if err = run.Wait(); err != nil {
+			failed(err)
+			continue
+		}
+
 		if needsHeader {
 			cp.SetHeader(header)
 			needsHeader = false
 		}
-		cp.UpdateChan <- table
 
-		if err := run.Wait(); err != nil {
-			panic(err)
-		}
+		// send the table to the cube plane
+		cp.UpdateChan <- table
 		time.Sleep(5 * time.Second)
 	}
 }
 
 func PollFile(file string, cp *cubeplane.CubePlane) {
+
+	failed := func(err error) {
+		fmt.Fprintf(os.Stderr, "Failed to load data form file %s: %s\n", file, err)
+		time.Sleep(5 * time.Second)
+	}
+
 	needsHeader := true
 	for {
 		var input io.Reader
@@ -140,7 +156,9 @@ func PollFile(file string, cp *cubeplane.CubePlane) {
 		} else {
 			fd, err := os.Open(file)
 			if err != nil {
-				panic(err)
+				failed(err)
+				fd.Close()
+				continue
 			}
 			input = bufio.NewReader(fd)
 		}
@@ -151,7 +169,7 @@ func PollFile(file string, cp *cubeplane.CubePlane) {
 			needsHeader = false
 		}
 		cp.UpdateChan <- table
-
+		time.Sleep(5 * time.Second)
 		fd.Close()
 	}
 }
