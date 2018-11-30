@@ -47,7 +47,8 @@ H                   Show usage help
 Mouse
 Wheel                      Zoom in/out
 Right click & drag  Rotate plane
-Right click on cube View details of the cube
+Right click cube     View details of the cube
+Right click header View selected metric
 `
 
 func (cp *CubePlane) initHud() {
