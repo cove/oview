@@ -94,7 +94,7 @@ func cmdView(cmd *cobra.Command, args []string) {
 		pause)
 
 	if command != "" {
-		go PollCmd(command, strings.Join(args[1:], " "), cp)
+		go PollCmd(command, cp)
 	} else if file != "" {
 		go PollFile(file, cp)
 	}
@@ -102,13 +102,19 @@ func cmdView(cmd *cobra.Command, args []string) {
 	app.Run()
 }
 
-func PollCmd(cmd, args string, cp *cubeplane.CubePlane) {
+func PollCmd(command string, cp *cubeplane.CubePlane) {
+
+	// split out cmd and args
+	tmp := strings.Fields(command)
+	cmd := tmp[0]
+	args := strings.Join(tmp[1:], " ")
 
 	failed := func(err error) {
 		fmt.Fprintf(os.Stderr, "Command failed to run command %s %s: %s\n", cmd, args, err)
 		time.Sleep(5 * time.Second)
 	}
 
+	// main loop that polls the command
 	needsHeader := true
 	for {
 		run := exec.Command(cmd, args)
