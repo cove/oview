@@ -34,6 +34,12 @@ Temporary Items
 *.so
 *.dylib
 
+# g3n
+!OpenAL32.dll
+!libogg.dll
+!libvorbis.dll
+!libvorbisfile.dll
+
 # Test binary, build with `go test -c`
 *.test
 
