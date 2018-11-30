@@ -13,7 +13,7 @@ oq view -c "ps aux"
 And will then detect the columns and allow you to click on them to view the different values and inspect
 each cube on the plane to see the details of it:
 
-![screenshot](https://raw.githubusercontent.com/cove/oq/master/screenshot.png)
+![screenshot](https://raw.githubusercontent.com/cove/oq/master/screenshot-anim.gif)
 
 ### Usage
 
