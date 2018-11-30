@@ -20,6 +20,8 @@ import (
 	"strconv"
 	"time"
 
+	"golang.org/x/sync/semaphore"
+
 	"github.com/g3n/engine/camera/control"
 
 	"github.com/g3n/engine/core"
@@ -62,6 +64,8 @@ type CubePlane struct {
 	header             []string
 	rotate             bool
 	UpdateChan         CubeUpdateChan
+	incomingInProgres  *semaphore.Weighted
+	timeout            chan bool
 }
 
 type CubeUpdateChan chan CubeUpdate
@@ -133,6 +137,8 @@ func Init(app *application.Application, cmd string, refresh int, wireframe bool,
 		rc:                core.NewRaycaster(&math32.Vector3{}, &math32.Vector3{}),
 		rotate:            !pause,
 		UpdateChan:        make(CubeUpdateChan, 1024),
+		incomingInProgres: semaphore.NewWeighted(1),
+		timeout:           make(chan bool, 1),
 		selectedHeaderIdx: -1,
 	}
 
@@ -164,12 +170,26 @@ func Init(app *application.Application, cmd string, refresh int, wireframe bool,
 	cp.selected = cp.plane[0][0]
 	cp.initHud()
 
-	app.SetInterval(time.Duration(refresh)*time.Second, nil, cp.processPlaneUpdates)
+	app.SetInterval(time.Duration(refresh)*time.Second, nil, cp.processIncoming)
+	go cp.processTimeout()
 
 	return cp
 }
 
-func (cp *CubePlane) processPlaneUpdates(i interface{}) {
+func (cp *CubePlane) processTimeout() {
+	for {
+		time.Sleep(1 * time.Second)
+		cp.timeout <- true
+	}
+}
+
+func (cp *CubePlane) processIncoming(i interface{}) {
+
+	// skip this update if we're already running
+	if !cp.incomingInProgres.TryAcquire(1) {
+		return
+	}
+
 	select {
 	case table := <-cp.UpdateChan:
 
@@ -190,7 +210,11 @@ func (cp *CubePlane) processPlaneUpdates(i interface{}) {
 		for i := range table {
 			cp.updatePlane(table[i][1], table[i])
 		}
+
+	case <-cp.timeout:
+		break // timeout to prevent blocking
 	}
+	cp.incomingInProgres.Release(1)
 }
 
 func (cp *CubePlane) updateSelected() {
