@@ -23,6 +23,8 @@ func (cp *CubePlane) onKey(evname string, ev interface{}) {
 
 	key := ev.(*window.KeyEvent)
 	switch key.Keycode {
+	case window.KeyJ:
+		fallthrough
 	case window.KeyLeft:
 		fallthrough
 	case window.KeyA:
@@ -42,8 +44,10 @@ func (cp *CubePlane) onKey(evname string, ev interface{}) {
 		if cp.cursorY > cp.size-1 {
 			cp.cursorY = cp.size - 1
 		}
-		cp.updateSelected()
+		cp.updateSelectedCube()
 
+	case window.KeyL:
+		fallthrough
 	case window.KeyRight:
 		fallthrough
 	case window.KeyD:
@@ -63,8 +67,10 @@ func (cp *CubePlane) onKey(evname string, ev interface{}) {
 		if cp.cursorY > cp.size-1 {
 			cp.cursorY = cp.size - 1
 		}
-		cp.updateSelected()
+		cp.updateSelectedCube()
 
+	case window.KeyI:
+		fallthrough
 	case window.KeyUp:
 		fallthrough
 	case window.KeyW:
@@ -84,8 +90,10 @@ func (cp *CubePlane) onKey(evname string, ev interface{}) {
 		if cp.cursorY > cp.size-1 {
 			cp.cursorY = cp.size - 1
 		}
-		cp.updateSelected()
+		cp.updateSelectedCube()
 
+	case window.KeyK:
+		fallthrough
 	case window.KeyDown:
 		fallthrough
 	case window.KeyS:
@@ -105,16 +113,16 @@ func (cp *CubePlane) onKey(evname string, ev interface{}) {
 		if cp.cursorY > cp.size-1 {
 			cp.cursorY = cp.size - 1
 		}
-		cp.updateSelected()
+		cp.updateSelectedCube()
 
 	case window.KeyF:
 		cp.cubeWireframe = !cp.cubeWireframe
 
-	case window.KeyP:
-		// pause
-		fallthrough
 	case window.KeyR:
 		cp.rotate = !cp.rotate
+
+	case window.KeyH:
+		cp.hud.usage.SetVisible(!cp.hud.usage.Visible())
 
 	case window.KeyQ:
 		cp.app.Quit()

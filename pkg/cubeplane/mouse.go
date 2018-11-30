@@ -63,5 +63,5 @@ func (cp *CubePlane) onMouse(evname string, ev interface{}) {
 		cp.cursorY = ud.locY
 	}
 
-	cp.updateSelected()
+	cp.updateSelectedCube()
 }

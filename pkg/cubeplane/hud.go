@@ -23,27 +23,73 @@ import (
 )
 
 type Hud struct {
-	textSize  float64
-	textColor *math32.Color
-	headers   *gui.Panel
-	values    *gui.Panel
-	buttons   []*gui.Button
+	fontSize float64
+	color    *math32.Color
+	main     *gui.Panel
+	headers  *gui.Panel
+	values   *gui.Panel
+	usage    *gui.Panel
+	buttons  []*gui.Button
 }
 
 type HudData struct {
 	attrIdx int
 }
 
+const USAGE_TEXT = `
+Keys
+F                   Wireframe
+R                   Start/stop rotation
+Arrows          Move cursor (also vi and awsd)
+Q                   Quit
+H                   Show usage help
+
+Mouse
+Wheel                      Zoom in/out
+Right click & drag  Rotate plane
+Right click on cube View details of the cube
+`
+
 func (cp *CubePlane) initHud() {
 
+	// main panel covers screen so we can display the usage in lower right
+	width, height := cp.app.Window().Size()
+	cp.hud.main = gui.NewPanel(float32(width), float32(height))
+	cp.hud.main.SetPosition(10, 10)
+
+	// header from the table we're displaying
 	cp.hud.headers = gui.NewPanel(500, 500)
 	cp.hud.headers.SetPosition(10, 10)
+	cp.hud.main.Add(cp.hud.headers)
 	//cp.hud.headers.SetBorders(1, 1, 1, 1)
 
+	// values/details of the cubes
 	cp.hud.values = gui.NewPanel(500, 500)
 	//cp.hud.values.SetBorders(1, 1, 1, 1)
 	cp.hud.headers.Add(cp.hud.values)
 
+	// usage text panel
+	cp.hud.usage = gui.NewPanel(100, 100)
+	cp.hud.usage.SetPosition(float32(width)-340, float32(height)-260)
+	cp.hud.usage.SetBorders(1, 1, 1, 1)
+	cp.hud.usage.SetColor4(&math32.Color4{0.871, 0.494, 0.267, .6})
+	cp.hud.usage.SetBordersColor4(&math32.Color4{0.871, 0.494, 0.267, 1.0})
+	cp.hud.usage.SetPaddings(5, 5, 5, 5)
+
+	// usage text
+	usagetext := gui.NewLabel(USAGE_TEXT)
+	usagetext.SetColor4(math32.NewColor4("White", 1.0))
+	usagetext.SetPaddings(5, 5, 5, 5)
+	cp.hud.usage.SetContentSize(usagetext.Size())
+	cp.hud.usage.Add(usagetext)
+	cp.hud.main.Add(cp.hud.usage)
+
+	// reposition the usage panel on a screen resize
+	cp.app.Gui().Subscribe(gui.OnResize, func(evname string, ev interface{}) {
+		width, height := cp.app.Window().Size()
+		cp.hud.main.SetSize(float32(width), float32(height))
+		cp.hud.usage.SetPosition(float32(width)-340, float32(height)-350)
+	})
 }
 
 func (cp *CubePlane) updateHud() {
@@ -54,7 +100,7 @@ func (cp *CubePlane) updateHud() {
 			lineSpace := float32(8.0)
 			name := cp.header[i]
 			header := gui.NewButton(name)
-			header.SetPosition(0, 20.0+(float32(i)*(float32(cp.hud.textSize)+lineSpace)))
+			header.SetPosition(0, 20.0+(float32(i)*(float32(cp.hud.fontSize)+lineSpace)))
 			header.SetStyles(&gui.ButtonStyles{
 				Over:   gui.ButtonStyle{FgColor: *math32.NewColor4("Gold", 1.0)},
 				Normal: gui.ButtonStyle{FgColor: *math32.NewColor4("White", 1.0)},
@@ -87,7 +133,7 @@ func (cp *CubePlane) updateHud() {
 			cp.hud.headers.Add(header)
 		}
 		cp.hud.headers.SetTopChild(cp.hud.values)
-		cp.app.Gui().Add(cp.hud.headers)
+		cp.app.Gui().Add(cp.hud.main)
 	}
 
 	// add values
@@ -103,7 +149,7 @@ func (cp *CubePlane) updateHud() {
 		lineSpace := float32(8.0)
 		name := cleanCommandPaths(ud.attrs[i])
 		value := gui.NewLabel(name)
-		value.SetPosition(110, 20.0+(float32(i)*(float32(cp.hud.textSize)+lineSpace)))
+		value.SetPosition(110, 20.0+(float32(i)*(float32(cp.hud.fontSize)+lineSpace)))
 		value.SetColor(math32.NewColor("White"))
 		cp.hud.values.Add(value)
 	}

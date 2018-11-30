@@ -79,7 +79,8 @@ type CubeData struct {
 	active bool
 }
 
-func Init(app *application.Application, cmd string, refresh int, wireframe bool, size int64, rotations int, pause bool) *CubePlane {
+func Init(app *application.Application, cmd string, refresh int,
+	wireframe bool, size int64, rotations int, pause bool, usage bool) *CubePlane {
 
 	// Add lights to the scene
 	ambientLight := light.NewAmbient(&math32.Color{1.0, 1.0, 1.0}, 0.8)
@@ -130,8 +131,8 @@ func Init(app *application.Application, cmd string, refresh int, wireframe bool,
 		backgroundColor:    math32.NewColorHex(0x2F2D3E),
 		selectedColor:      math32.NewColorHex(0x99BAA4),
 		hud: &Hud{
-			textColor: math32.NewColorHex(0xFCF2C6),
-			textSize:  float64(12.0),
+			color:    math32.NewColorHex(0xFCF2C6),
+			fontSize: float64(12.0),
 		},
 		command:           cmd,
 		rc:                core.NewRaycaster(&math32.Vector3{}, &math32.Vector3{}),
@@ -148,15 +149,9 @@ func Init(app *application.Application, cmd string, refresh int, wireframe bool,
 
 	// Init event handling
 	app.TimerManager.Initialize()
-	app.Window().Subscribe(window.OnKeyDown, func(evname string, ev interface{}) {
-		cp.onKey(evname, ev)
-	})
-	app.Window().Subscribe(window.OnKeyRepeat, func(evname string, ev interface{}) {
-		cp.onKey(evname, ev)
-	})
-	app.Window().Subscribe(window.OnMouseDown, func(evname string, ev interface{}) {
-		cp.onMouse(evname, ev)
-	})
+	app.Window().Subscribe(window.OnKeyDown, cp.onKey)
+	app.Window().Subscribe(window.OnKeyRepeat, cp.onKey)
+	app.Window().Subscribe(window.OnMouseDown, cp.onMouse)
 	cp.app.SubscribeID(application.OnAfterRender, 1, func(evname string, ev interface{}) {
 		if cp.rotate {
 			cp.app.Scene().RotateOnAxis(&math32.Vector3{0, 0, 1},
@@ -169,6 +164,9 @@ func Init(app *application.Application, cmd string, refresh int, wireframe bool,
 	// select first cube to start
 	cp.selected = cp.plane[0][0]
 	cp.initHud()
+
+	// Display or hide usage text in window after startup
+	cp.hud.usage.SetVisible(usage)
 
 	app.SetInterval(time.Duration(refresh)*time.Second, nil, cp.processIncoming)
 	go cp.processTimeout()
@@ -208,7 +206,7 @@ func (cp *CubePlane) processIncoming(i interface{}) {
 		cp.updateHud()
 		cp.cullExpiredCubes()
 		for i := range table {
-			cp.updatePlane(table[i][1], table[i])
+			cp.updateCube(table[i][1], table[i])
 		}
 
 	case <-cp.timeout:
@@ -217,7 +215,7 @@ func (cp *CubePlane) processIncoming(i interface{}) {
 	cp.incomingInProgres.Release(1)
 }
 
-func (cp *CubePlane) updateSelected() {
+func (cp *CubePlane) updateSelectedCube() {
 
 	type matI interface {
 		EmissiveColor() math32.Color
@@ -246,8 +244,9 @@ func (cp *CubePlane) updateSelected() {
 	cp.updateHud()
 }
 
-func (cp *CubePlane) updatePlane(id string, attrs []string) {
+func (cp *CubePlane) updateCube(id string, attrs []string) {
 
+	// update exiting cube
 	for j := range cp.plane {
 		for i := range cp.plane {
 			node := cp.plane[i][j]
@@ -259,13 +258,14 @@ func (cp *CubePlane) updatePlane(id string, attrs []string) {
 				cp.updateCubeStatus(node)
 
 				if cp.selected == node {
-					cp.updateSelected()
+					cp.updateSelectedCube()
 				}
 				return
 			}
 		}
 	}
 
+	// fine a spot for a new cube
 	for j := range cp.plane {
 		for i := range cp.plane {
 			node := cp.plane[i][j]
@@ -279,7 +279,7 @@ func (cp *CubePlane) updatePlane(id string, attrs []string) {
 				cp.updateCubeStatus(node)
 
 				if cp.selected == node {
-					cp.updateSelected()
+					cp.updateSelectedCube()
 				}
 				return
 			}
@@ -299,46 +299,6 @@ func (cp *CubePlane) cullExpiredCubes() {
 		}
 	}
 	cp.ttl++
-}
-
-func (cp *CubePlane) isExpired(node *core.Node) bool {
-	ud := node.UserData().(CubeData)
-	return ud.ttl < (cp.ttl - 1)
-}
-
-func isActive(node *core.Node) bool {
-	ud := node.UserData().(CubeData)
-	return ud.active
-}
-
-func makeInactive(node *core.Node) {
-	node.SetName("")
-	ud := node.UserData().(CubeData)
-	ud.active = false
-	node.SetUserData(ud)
-}
-
-func makeActive(node *core.Node) {
-	ud := node.UserData().(CubeData)
-	ud.active = true
-	node.SetUserData(ud)
-}
-
-func (cp *CubePlane) SetHeader(header CubeHeader) {
-	cp.header = header
-}
-
-func (cp *CubePlane) dumpPlane() {
-
-	fmt.Println("Dumping CubePlane:")
-	for y := range cp.plane {
-		for x := range cp.plane {
-			name := cp.plane[x][y].Name()
-			fmt.Printf("%5s\t", name)
-		}
-		fmt.Println("")
-	}
-
 }
 
 func (cp *CubePlane) updateCubeStatus(node *core.Node) {
@@ -416,6 +376,46 @@ func (cp *CubePlane) initCubePlane() {
 			cp.app.Scene().Add(node)
 			cp.plane[x][y] = node
 		}
+	}
+
+}
+
+func (cp *CubePlane) isExpired(node *core.Node) bool {
+	ud := node.UserData().(CubeData)
+	return ud.ttl < (cp.ttl - 1)
+}
+
+func isActive(node *core.Node) bool {
+	ud := node.UserData().(CubeData)
+	return ud.active
+}
+
+func makeInactive(node *core.Node) {
+	node.SetName("")
+	ud := node.UserData().(CubeData)
+	ud.active = false
+	node.SetUserData(ud)
+}
+
+func makeActive(node *core.Node) {
+	ud := node.UserData().(CubeData)
+	ud.active = true
+	node.SetUserData(ud)
+}
+
+func (cp *CubePlane) SetHeader(header CubeHeader) {
+	cp.header = header
+}
+
+func (cp *CubePlane) dumpPlane() {
+
+	fmt.Println("Dumping CubePlane:")
+	for y := range cp.plane {
+		for x := range cp.plane {
+			name := cp.plane[x][y].Name()
+			fmt.Printf("%5s\t", name)
+		}
+		fmt.Println("")
 	}
 
 }

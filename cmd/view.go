@@ -49,6 +49,7 @@ var (
 	pause     bool
 	file      string
 	command   string
+	usage     bool
 )
 
 func init() {
@@ -61,6 +62,7 @@ func init() {
 	viewCmd.PersistentFlags().BoolVarP(&wireframe, "wireframe", "w", wireframe, "Render cubes as wireframes to improve performance")
 	viewCmd.PersistentFlags().StringVarP(&file, "file", "f", file, "Load data from file or use '-' to read from stdin")
 	viewCmd.PersistentFlags().StringVarP(&command, "command", "c", command, "Command to run to get data from")
+	viewCmd.PersistentFlags().BoolVarP(&usage, "usage", "u", true, "Show usage text in screen on startup")
 
 }
 
@@ -91,7 +93,8 @@ func cmdView(cmd *cobra.Command, args []string) {
 		wireframe,
 		size,
 		rotation,
-		pause)
+		pause,
+		usage)
 
 	if command != "" {
 		go PollCmd(command, cp)
