@@ -18,29 +18,47 @@ import (
 	"bufio"
 	"io"
 	"strings"
-	"unicode"
 )
 
 func NewTable(fd io.Reader) ([]string, [][]string, error) {
 
 	var table [][]string
 	var header []string
+	sep := ""
 
 	scanner := bufio.NewScanner(fd)
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		// skip to header
+		// Assume first line is header
 		if header == nil {
-			if IsTableHeader(line) {
+			if strings.ContainsAny(line, ",") {
+				sep = ","
+			} else if strings.ContainsAny(line, "\t") {
+				sep = "\t"
+			} else if strings.ContainsAny(line, ":") {
+				sep = ":"
+			}
+
+			if sep != "" {
+				for _, v := range strings.Split(line, sep) {
+					header = append(header, strings.TrimSpace(v))
+				}
+			} else {
 				for _, v := range strings.Fields(line) {
 					header = append(header, strings.TrimSpace(v))
 				}
 			}
+
 			continue
 		}
 
-		fields := strings.Fields(line)
+		var fields []string
+		if sep != "" {
+			fields = strings.Split(line, sep)
+		} else {
+			fields = strings.Fields(line)
+		}
 
 		if len(fields) > len(header) {
 			// concat trailing fields to last column
@@ -63,51 +81,4 @@ func NewTable(fd io.Reader) ([]string, [][]string, error) {
 	}
 
 	return header, table, nil
-}
-
-func findFirstUniqueValuedColumn(table [][]string) int {
-
-	uniqueColumn := -1
-	for x := range table[0] {
-		previous := ""
-		for y := range table {
-			if IsTableHeader(strings.Join(table[y], " ")) {
-				continue
-			}
-
-			if table[y] == nil {
-				break
-			}
-
-			if previous == "" {
-				previous = table[y][x]
-			} else if previous != table[y][x] {
-				uniqueColumn = x
-			} else {
-				uniqueColumn = -1
-				break
-			}
-		}
-
-		if uniqueColumn != -1 {
-			break
-		}
-	}
-
-	return uniqueColumn
-}
-
-func IsTableHeader(s string) bool {
-	score := 0.0
-	for _, c := range s {
-		if unicode.IsUpper(c) || unicode.IsSpace(c) || c == '-' || c == '=' {
-			score += 1.0
-		}
-		if unicode.IsDigit(c) || c == '/' || c == '\\' {
-			score -= 1.0
-		}
-	}
-	confidence := score/float64(len(s)) > .8
-
-	return confidence
 }
