@@ -14,7 +14,7 @@
 
 package main
 
-import "github.com/cove/oq/cmd"
+import "github.com/cove/oview/cmd"
 
 func main() {
 	cmd.Execute()

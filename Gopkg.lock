@@ -2,44 +2,6 @@
 
 
 [[projects]]
-  branch = "master"
-  digest = "1:1237f2e0fe3256bbce813cc1bafddaf26b85bddbd2f8c08c30eb845140198aee"
-  name = "github.com/armon/consul-api"
-  packages = ["."]
-  pruneopts = "T"
-  revision = "eb2c6b5be1b66bab83016e0b05f01b8d5496ffbd"
-
-[[projects]]
-  digest = "1:cb75927622cd1525aa11b62a6a35b863dd9758cb9265c9ac451de3e150c80bc4"
-  name = "github.com/coreos/etcd"
-  packages = [
-    "client",
-    "pkg/pathutil",
-    "pkg/srv",
-    "pkg/types",
-    "version",
-  ]
-  pruneopts = "T"
-  revision = "27fc7e2296f506182f58ce846e48f36b34fe6842"
-  version = "v3.3.10"
-
-[[projects]]
-  digest = "1:6f0584802aa27c9eba4629e3c8830b66dbc017d3eaf5df3bab2ffb510f6750e3"
-  name = "github.com/coreos/go-semver"
-  packages = ["semver"]
-  pruneopts = "T"
-  revision = "8ab6407b697782a06568d4b7f1db25550ec2e4c6"
-  version = "v0.2.0"
-
-[[projects]]
-  digest = "1:607c4f1f646bfe5ec1a4eac4a505608f280829550ed546a243698a525d3c5fe8"
-  name = "github.com/cpuguy83/go-md2man"
-  packages = ["md2man"]
-  pruneopts = "T"
-  revision = "20f5889cbdc3c73dbd2862796665e7c465ade7d1"
-  version = "v1.0.8"
-
-[[projects]]
   digest = "1:7fc160b460a6fc506b37fcca68332464c3f2cd57b6e3f111f26c5bbfd2d5518e"
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
@@ -52,19 +14,11 @@
   digest = "1:60e12dd3ce3cb8aae9f9c6132d415032153c9447a59044b948148c61b578c603"
   name = "github.com/g3n/engine"
   packages = [
-    "animation",
     "audio/al",
-    "audio/ov",
     "audio/vorbis",
     "camera",
     "camera/control",
     "core",
-    "experimental/collision",
-    "experimental/collision/shape",
-    "experimental/physics/constraint",
-    "experimental/physics/equation",
-    "experimental/physics/object",
-    "experimental/physics/solver",
     "geometry",
     "gls",
     "graphic",
@@ -98,7 +52,6 @@
   digest = "1:d2d5e9922ece6ae1d37016e7e149ea86ad3d3ec7505376fc6fdba3e2f8ff5e2e"
   name = "github.com/golang/freetype"
   packages = [
-    ".",
     "raster",
     "truetype",
   ]
@@ -133,14 +86,6 @@
   version = "v1.0"
 
 [[projects]]
-  digest = "1:9cedee824c21326bd26950bd9e1ffe9dc4e7ca03dc8634d0e6f954ee6a383172"
-  name = "github.com/kr/fs"
-  packages = ["."]
-  pruneopts = "T"
-  revision = "1455def202f6e05b95cc7bfc7e8ae67ae5141eba"
-  version = "v0.1.0"
-
-[[projects]]
   digest = "1:53e8c5c79716437e601696140e8b1801aae4204f4ec54a504333702a49572c4f"
   name = "github.com/magiconair/properties"
   packages = ["."]
@@ -173,36 +118,12 @@
   version = "v1.2.0"
 
 [[projects]]
-  digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
-  name = "github.com/pkg/errors"
-  packages = ["."]
-  pruneopts = "T"
-  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
-  version = "v0.8.0"
-
-[[projects]]
   digest = "1:cfa0d7741863a0e1d30e0ccdd4b48a96a471cdb47892303de8b92c3713af3e77"
   name = "github.com/pkg/profile"
   packages = ["."]
   pruneopts = "T"
   revision = "5b67d428864e92711fcbd2f8629456121a56d91f"
   version = "v1.2.1"
-
-[[projects]]
-  digest = "1:21dabe7e85ccf22920f37a075084c9895cf4bc495a24d902e646c934818e0dc6"
-  name = "github.com/pkg/sftp"
-  packages = ["."]
-  pruneopts = "T"
-  revision = "08de04f133f27844173471167014e1a753655ac8"
-  version = "v1.8.3"
-
-[[projects]]
-  digest = "1:40e527269f1feb16b3069bfe80ff05a462d190eacfe07eb0a59fa25c381db7af"
-  name = "github.com/russross/blackfriday"
-  packages = ["."]
-  pruneopts = "T"
-  revision = "05f3235734ad95d0016f6a23902f06461fcf567a"
-  version = "v1.5.2"
 
 [[projects]]
   digest = "1:b7bf9fd95d38ebe6726a63b7d0320611f7c920c64e2c8313eba0cec51926bf55"
@@ -226,10 +147,7 @@
 [[projects]]
   digest = "1:8be8b3743fc9795ec21bbd3e0fc28ff6234018e1a269b0a7064184be95ac13e0"
   name = "github.com/spf13/cobra"
-  packages = [
-    ".",
-    "cobra/cmd",
-  ]
+  packages = ["."]
   pruneopts = "T"
   revision = "ef82de70bb3f60c65fb8eebacbb2d122ef517385"
   version = "v0.0.3"
@@ -259,73 +177,15 @@
   version = "v1.2.1"
 
 [[projects]]
-  digest = "1:a71a71ef17f7d6fc49b0572bb3d1253a5408dd5abb48d8908ac64a6e3f919ba8"
-  name = "github.com/ugorji/go"
-  packages = ["codec"]
-  pruneopts = "T"
-  revision = "b4c50a2b199d93b13dc15e78929cfb23bfdf21ab"
-  version = "v1.1.1"
-
-[[projects]]
-  branch = "master"
-  digest = "1:f5474b0bfcb13bc0c8b54dd5443b0c640b9bc1049677d60f9aa130a61316dc76"
-  name = "github.com/xordataexchange/crypt"
-  packages = [
-    "backend",
-    "backend/consul",
-    "backend/etcd",
-    "config",
-    "encoding/secconf",
-  ]
-  pruneopts = "T"
-  revision = "b2862e3d0a775f18c7cfe02273500ae307b61218"
-
-[[projects]]
-  branch = "master"
-  digest = "1:a0097f60e459fbf5512fcc7aa8bf7df60471624dc7956c68e7eb7f8db3706aa7"
-  name = "golang.org/x/crypto"
-  packages = [
-    "cast5",
-    "curve25519",
-    "ed25519",
-    "ed25519/internal/edwards25519",
-    "internal/chacha20",
-    "internal/subtle",
-    "openpgp",
-    "openpgp/armor",
-    "openpgp/elgamal",
-    "openpgp/errors",
-    "openpgp/packet",
-    "openpgp/s2k",
-    "poly1305",
-    "ssh",
-  ]
-  pruneopts = "T"
-  revision = "eb0de9b17e854e9b1ccd9963efafc79862359959"
-
-[[projects]]
   branch = "master"
   digest = "1:34aa8d327ff3059c771b721563412a61e8a37af03846a31c56d5dd9985ca32f9"
   name = "golang.org/x/image"
   packages = [
     "font",
-    "font/plan9font",
-    "math/f64",
     "math/fixed",
   ]
   pruneopts = "T"
   revision = "cd38e8056d9b27bb2f265effa37fb0ea6b8a7f0f"
-
-[[projects]]
-  branch = "master"
-  digest = "1:a92d7dd2268883d2d466576cb7319cc5321c906d853da4b4ac1ffc407895f809"
-  name = "golang.org/x/net"
-  packages = [
-    "html",
-    "html/atom",
-  ]
-  pruneopts = "T"
-  revision = "fae4c4e3ad76c295c3d6d259f898136b4bf833a8"
 
 [[projects]]
   branch = "master"
@@ -339,15 +199,7 @@
   branch = "master"
   digest = "1:a41815681b9cb9d91eb5bd22009d99af713567bb20f14b2ff13765d8fd8de808"
   name = "golang.org/x/sys"
-  packages = [
-    "unix",
-    "windows",
-    "windows/registry",
-    "windows/svc",
-    "windows/svc/debug",
-    "windows/svc/eventlog",
-    "windows/svc/mgr",
-  ]
+  packages = ["unix"]
   pruneopts = "T"
   revision = "4ed8d59d0b35e1e29334a206d1b3f38b1e5dfb31"
 
@@ -355,58 +207,16 @@
   digest = "1:6164911cb5e94e8d8d5131d646613ff82c14f5a8ce869de2f6d80d9889df8c5a"
   name = "golang.org/x/text"
   packages = [
-    "cmd/gotext/examples/extract_http/pkg",
-    "collate",
-    "collate/build",
-    "encoding",
-    "encoding/charmap",
-    "encoding/internal",
-    "encoding/internal/identifier",
-    "encoding/japanese",
-    "encoding/korean",
-    "encoding/simplifiedchinese",
-    "encoding/traditionalchinese",
-    "encoding/unicode",
-    "feature/plural",
-    "internal",
-    "internal/catmsg",
-    "internal/cldrtree",
-    "internal/colltab",
-    "internal/format",
     "internal/gen",
-    "internal/number",
-    "internal/stringset",
-    "internal/tag",
     "internal/triegen",
     "internal/ucd",
-    "internal/utf8internal",
-    "language",
-    "message",
-    "message/catalog",
-    "message/pipeline",
-    "runes",
     "transform",
-    "unicode/bidi",
     "unicode/cldr",
     "unicode/norm",
-    "unicode/rangetable",
   ]
   pruneopts = "T"
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
-
-[[projects]]
-  branch = "master"
-  digest = "1:5c5b690e922c6591c54c488d656fd774c863b6be42c5300e2654d623d0a471f5"
-  name = "golang.org/x/tools"
-  packages = [
-    "go/ast/astutil",
-    "go/buildutil",
-    "go/internal/cgo",
-    "go/loader",
-  ]
-  pruneopts = "T"
-  revision = "1c3d964395ce8f04f3b03b30aaed0b096c08c3c6"
 
 [[projects]]
   digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
@@ -420,112 +230,23 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/cpuguy83/go-md2man/md2man",
-    "github.com/fsnotify/fsnotify",
-    "github.com/g3n/engine/animation",
-    "github.com/g3n/engine/audio/al",
-    "github.com/g3n/engine/audio/ov",
-    "github.com/g3n/engine/audio/vorbis",
-    "github.com/g3n/engine/camera",
     "github.com/g3n/engine/camera/control",
     "github.com/g3n/engine/core",
-    "github.com/g3n/engine/experimental/collision",
-    "github.com/g3n/engine/experimental/collision/shape",
-    "github.com/g3n/engine/experimental/physics/constraint",
-    "github.com/g3n/engine/experimental/physics/equation",
-    "github.com/g3n/engine/experimental/physics/object",
-    "github.com/g3n/engine/experimental/physics/solver",
     "github.com/g3n/engine/geometry",
     "github.com/g3n/engine/gls",
     "github.com/g3n/engine/graphic",
     "github.com/g3n/engine/gui",
-    "github.com/g3n/engine/gui/assets",
-    "github.com/g3n/engine/gui/assets/icon",
     "github.com/g3n/engine/light",
     "github.com/g3n/engine/material",
     "github.com/g3n/engine/math32",
     "github.com/g3n/engine/renderer",
-    "github.com/g3n/engine/renderer/shaders",
-    "github.com/g3n/engine/text",
-    "github.com/g3n/engine/texture",
     "github.com/g3n/engine/util/application",
-    "github.com/g3n/engine/util/logger",
     "github.com/g3n/engine/window",
-    "github.com/go-gl/glfw/v3.2/glfw",
-    "github.com/golang/freetype",
-    "github.com/golang/freetype/raster",
-    "github.com/golang/freetype/truetype",
-    "github.com/hashicorp/hcl",
-    "github.com/hashicorp/hcl/hcl/ast",
-    "github.com/hashicorp/hcl/hcl/parser",
-    "github.com/hashicorp/hcl/hcl/printer",
-    "github.com/hashicorp/hcl/hcl/scanner",
-    "github.com/hashicorp/hcl/hcl/strconv",
-    "github.com/hashicorp/hcl/hcl/token",
-    "github.com/hashicorp/hcl/json/parser",
-    "github.com/hashicorp/hcl/json/scanner",
-    "github.com/hashicorp/hcl/json/token",
-    "github.com/inconshreveable/mousetrap",
-    "github.com/magiconair/properties",
     "github.com/mitchellh/go-homedir",
-    "github.com/mitchellh/mapstructure",
-    "github.com/pelletier/go-toml",
     "github.com/pkg/profile",
-    "github.com/pkg/sftp",
-    "github.com/spf13/afero",
-    "github.com/spf13/afero/mem",
-    "github.com/spf13/cast",
     "github.com/spf13/cobra",
-    "github.com/spf13/cobra/cobra/cmd",
-    "github.com/spf13/jwalterweatherman",
-    "github.com/spf13/pflag",
     "github.com/spf13/viper",
-    "github.com/xordataexchange/crypt/config",
-    "golang.org/x/image/font",
-    "golang.org/x/image/font/plan9font",
-    "golang.org/x/image/math/f64",
-    "golang.org/x/image/math/fixed",
-    "golang.org/x/net/html",
-    "golang.org/x/net/html/atom",
     "golang.org/x/sync/semaphore",
-    "golang.org/x/sys/unix",
-    "golang.org/x/sys/windows",
-    "golang.org/x/sys/windows/registry",
-    "golang.org/x/sys/windows/svc",
-    "golang.org/x/sys/windows/svc/debug",
-    "golang.org/x/sys/windows/svc/eventlog",
-    "golang.org/x/sys/windows/svc/mgr",
-    "golang.org/x/text/cmd/gotext/examples/extract_http/pkg",
-    "golang.org/x/text/collate",
-    "golang.org/x/text/encoding",
-    "golang.org/x/text/encoding/charmap",
-    "golang.org/x/text/encoding/internal/identifier",
-    "golang.org/x/text/encoding/japanese",
-    "golang.org/x/text/encoding/korean",
-    "golang.org/x/text/encoding/simplifiedchinese",
-    "golang.org/x/text/encoding/traditionalchinese",
-    "golang.org/x/text/encoding/unicode",
-    "golang.org/x/text/feature/plural",
-    "golang.org/x/text/internal",
-    "golang.org/x/text/internal/catmsg",
-    "golang.org/x/text/internal/cldrtree",
-    "golang.org/x/text/internal/format",
-    "golang.org/x/text/internal/gen",
-    "golang.org/x/text/internal/number",
-    "golang.org/x/text/internal/stringset",
-    "golang.org/x/text/internal/ucd",
-    "golang.org/x/text/language",
-    "golang.org/x/text/message",
-    "golang.org/x/text/message/catalog",
-    "golang.org/x/text/message/pipeline",
-    "golang.org/x/text/transform",
-    "golang.org/x/text/unicode/bidi",
-    "golang.org/x/text/unicode/cldr",
-    "golang.org/x/text/unicode/norm",
-    "golang.org/x/text/unicode/rangetable",
-    "golang.org/x/tools/go/buildutil",
-    "golang.org/x/tools/go/loader",
-    "gopkg.in/yaml.v2",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

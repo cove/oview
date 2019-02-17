@@ -1,13 +1,13 @@
-oq
+oview
 ---
 
-_oq_ is a command line utility that takes text input from other commands, files or stdin and renders it
+_oview_ is a command line utility that takes text input from other commands, files or stdin and renders it
 it in 3D to get a quick birds eye view of the metrics.
 
 ### Examlpe
 For example the following command will poll the output from the Unix `ps` command:
 ``` 
-oq view -c "ps aux"
+oview -c "ps aux"
 ```
    
 And will then detect the columns and allow you to click on them to view the different values and inspect
@@ -19,7 +19,7 @@ each cube on the plane to see the details of it:
 
 ```
 Usage:
-  oq view [flags]
+  oview [flags]
 
 Flags:
   -c, --command string   Command to run to get data from
@@ -33,5 +33,5 @@ Flags:
   -w, --wireframe        Render cubes as wireframes to improve performance
 
 Global Flags:
-      --config string   config file (default is $HOME/.oq.yaml)
+      --config string   config file (default is $HOME/.oview.yaml)
 ```

@@ -27,7 +27,7 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "oq",
+	Use:   "oview",
 	Short: "Displays a text table as a 3D rotating plane of cubes as a heat map",
 	Long: `Takes a text table and displays it as a 3D rotating plane of cubes,
 where the size of the cube grows and shrinks based on the values
@@ -37,7 +37,7 @@ see the changes in it as it changes over time.
 `,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	//Run: cmdView,
+	Run: cmdView,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -51,7 +51,7 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.oq.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.oview.yaml)")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -67,9 +67,9 @@ func initConfig() {
 			os.Exit(1)
 		}
 
-		// Search config in home directory with name ".oq" (without extension).
+		// Search config in home directory with name ".oview" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".oq")
+		viper.SetConfigName(".oview")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match

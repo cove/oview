@@ -23,10 +23,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cove/oq/pkg/text2table"
+	"github.com/cove/oview/pkg/text2table"
 	profile2 "github.com/pkg/profile"
 
-	"github.com/cove/oq/pkg/cubeplane"
+	"github.com/cove/oview/pkg/cubeplane"
 
 	"github.com/g3n/engine/util/application"
 
@@ -81,7 +81,7 @@ func cmdView(cmd *cobra.Command, args []string) {
 	}
 
 	app, _ := application.Create(application.Options{
-		Title:  "oq",
+		Title:  "oview",
 		Width:  800,
 		Height: 600,
 	})

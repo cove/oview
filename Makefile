@@ -17,7 +17,7 @@ GOARCH ?= $(shell go env GOARCH)
 
 .PHONY: build
 build:
-	go build -o oq
+	go build -o oview
 
 .PHONY: clean
 clean:
@@ -30,13 +30,13 @@ deps:
 
 .PHONY: release-unix
 release-unix:
-	go build -o oq
-	tar -cvf oq-${GOOS}-${GOARCH}.tar oq
-	gzip -9 oq-${GOOS}-${GOARCH}.tar
+	go build -o oview
+	tar -cvf oview-${GOOS}-${GOARCH}.tar oview
+	gzip -9 oview-${GOOS}-${GOARCH}.tar
 
 .PHONY: release-windows
 release-windows:
-	go build -o oq
+	go build -o oview
 	copy vendor/github.com/g3n/engine/audio/windows/bin/*.dll .
-	zip -9 oq-${GOOS}-${GOARCH}.tar oq *.dll
+	zip -9 oview-${GOOS}-${GOARCH}.tar oview *.dll
 
