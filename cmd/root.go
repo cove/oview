@@ -38,7 +38,7 @@ var (
 	profile   bool
 	refresh   = 3
 	wireframe bool
-	size      = int64(20)
+	size      = int64(30)
 	rotation  = 32
 	pause     bool
 	file      string
@@ -49,12 +49,12 @@ var (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "oview",
-	Short: "Displays a text table as a 3D rotating plane of cubes as a heat map",
+	Short: "Displays a text table as a 3D rotating plane of cubes",
 	Long: `Takes a text table and displays it as a 3D rotating plane of cubes,
 where the size of the cube grows and shrinks based on the values
-associated with the cube along with a heat map. This allows one to
-see a large table that may not otherwise fit on the screen and quickly
-see the changes in it as it changes over time.
+associated with the cube. This allows one to see a large table that may 
+not otherwise fit on the screen and quickly see the changes in it as it
+changes over time.
 `,
 	Run: view,
 }
@@ -119,8 +119,8 @@ func view(cmd *cobra.Command, args []string) {
 
 	app, _ := application.Create(application.Options{
 		Title:  "oview",
-		Width:  800,
-		Height: 600,
+		Width:  900,
+		Height: 900,
 	})
 
 	cp := cubeplane.Init(

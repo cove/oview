@@ -85,7 +85,7 @@ func Init(app *application.Application, cmd string, refresh int,
 	// Add lights to the scene
 	ambientLight := light.NewAmbient(&math32.Color{1.0, 1.0, 1.0}, 0.8)
 	app.Scene().Add(ambientLight)
-	pointLight := light.NewPoint(&math32.Color{1, 1, 1}, 10.0)
+	pointLight := light.NewPoint(&math32.Color{1, 1, 1}, 20.0)
 	pointLight.SetPosition(1, 0, 10)
 	app.Scene().Add(pointLight)
 
@@ -94,7 +94,7 @@ func Init(app *application.Application, cmd string, refresh int,
 	//app.Scene().Add(axis)
 
 	// Position the camera to look at center of board at an angle
-	app.CameraPersp().SetPosition(0, -20, 10)
+	app.CameraPersp().SetPosition(0, -20, 30)
 	app.CameraPersp().LookAt(&math32.Vector3{0, 0, 0})
 
 	// Init for hud
