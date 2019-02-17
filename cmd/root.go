@@ -36,7 +36,7 @@ var cfgFile string
 
 var (
 	profile   bool
-	refresh   = 5
+	refresh   = 3
 	wireframe bool
 	size      = int64(20)
 	rotation  = 32
