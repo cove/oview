@@ -10,8 +10,8 @@
   version = "v1.4.7"
 
 [[projects]]
-  branch = "master"
-  digest = "1:60e12dd3ce3cb8aae9f9c6132d415032153c9447a59044b948148c61b578c603"
+  branch = "oq-fixes"
+  digest = "1:f1651e2939d2e5fc97416dabac989b5b17faf52139c10628b843864cf2adb9ab"
   name = "github.com/g3n/engine"
   packages = [
     "audio/al",
@@ -37,7 +37,8 @@
     "window",
   ]
   pruneopts = "T"
-  revision = "2965961cd3c919b78955e29531add2dbb390e9fc"
+  revision = "0efeb4535ac68a852653cbb9ad865114a9e6b104"
+  source = "https://github.com/cove/engine.git"
 
 [[projects]]
   branch = "master"
@@ -116,14 +117,6 @@
   pruneopts = "T"
   revision = "c01d1270ff3e442a8a57cddc1c92dc1138598194"
   version = "v1.2.0"
-
-[[projects]]
-  digest = "1:cfa0d7741863a0e1d30e0ccdd4b48a96a471cdb47892303de8b92c3713af3e77"
-  name = "github.com/pkg/profile"
-  packages = ["."]
-  pruneopts = "T"
-  revision = "5b67d428864e92711fcbd2f8629456121a56d91f"
-  version = "v1.2.1"
 
 [[projects]]
   digest = "1:b7bf9fd95d38ebe6726a63b7d0320611f7c920c64e2c8313eba0cec51926bf55"
@@ -243,7 +236,6 @@
     "github.com/g3n/engine/util/application",
     "github.com/g3n/engine/window",
     "github.com/mitchellh/go-homedir",
-    "github.com/pkg/profile",
     "github.com/spf13/cobra",
     "github.com/spf13/viper",
     "golang.org/x/sync/semaphore",

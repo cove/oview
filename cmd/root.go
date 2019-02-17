@@ -15,8 +15,17 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"os"
+	"os/exec"
+	"strings"
+	"time"
+
+	"github.com/cove/oview/pkg/cubeplane"
+	"github.com/cove/oview/pkg/text2table"
+	"github.com/g3n/engine/util/application"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -24,6 +33,18 @@ import (
 )
 
 var cfgFile string
+
+var (
+	profile   bool
+	refresh   = 5
+	wireframe bool
+	size      = int64(20)
+	rotation  = 32
+	pause     bool
+	file      string
+	command   string
+	usage     bool
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -35,9 +56,7 @@ associated with the cube along with a heat map. This allows one to
 see a large table that may not otherwise fit on the screen and quickly
 see the changes in it as it changes over time.
 `,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	Run: cmdView,
+	Run: view,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -52,6 +71,15 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.oview.yaml)")
+	rootCmd.Flags().BoolVar(&profile, "profile", profile, "Profile CPU and memory usage")
+	rootCmd.PersistentFlags().Int64VarP(&size, "size", "s", size, "Size of cube plane")
+	rootCmd.PersistentFlags().IntVarP(&refresh, "interval", "i", refresh, "Refresh data interval in seconds")
+	rootCmd.PersistentFlags().IntVarP(&rotation, "rotations", "r", rotation, "How many seconds each rotation takes")
+	rootCmd.PersistentFlags().BoolVarP(&pause, "pause", "p", pause, "Start up with rotation paused to improve performance")
+	rootCmd.PersistentFlags().BoolVarP(&wireframe, "wireframe", "w", wireframe, "Render cubes as wireframes to improve performance")
+	rootCmd.PersistentFlags().StringVarP(&file, "file", "f", file, "Load data from file or use '-' to read from stdin")
+	rootCmd.PersistentFlags().StringVarP(&command, "command", "c", command, "Command to run to get data from")
+	rootCmd.PersistentFlags().BoolVarP(&usage, "usage", "u", true, "Show usage text in screen on startup")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -77,5 +105,117 @@ func initConfig() {
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	}
+}
+
+func view(cmd *cobra.Command, args []string) {
+
+	// validate command line args
+	if file == "" && command == "" {
+		fmt.Fprintln(os.Stderr, "Please specify either -f or -c to load data")
+		cmd.Usage()
+		os.Exit(-1)
+	}
+
+	app, _ := application.Create(application.Options{
+		Title:  "oview",
+		Width:  800,
+		Height: 600,
+	})
+
+	cp := cubeplane.Init(
+		app,
+		strings.Join(args, " "),
+		refresh,
+		wireframe,
+		size,
+		rotation,
+		pause,
+		usage)
+
+	if command != "" {
+		go PollCmd(command, cp)
+	} else if file != "" {
+		go PollFile(file, cp)
+	}
+
+	app.Run()
+}
+
+func PollCmd(command string, cp *cubeplane.CubePlane) {
+
+	// split out cmd and args
+	tmp := strings.Fields(command)
+	cmd := tmp[0]
+	args := strings.Join(tmp[1:], " ")
+
+	failed := func(err error) {
+		fmt.Fprintf(os.Stderr, "Command failed to run command %s %s: %s\n", cmd, args, err)
+		time.Sleep(5 * time.Second)
+	}
+
+	// main loop that polls the command
+	needsHeader := true
+	for {
+		run := exec.Command(cmd, args)
+		stdout, err := run.StdoutPipe()
+		if err != nil {
+			failed(err)
+			continue
+		}
+
+		if err := run.Start(); err != nil {
+			failed(err)
+			continue
+		}
+
+		header, table, err := text2table.NewTable(stdout)
+		if err = run.Wait(); err != nil {
+			failed(err)
+			continue
+		}
+
+		if needsHeader {
+			cp.SetHeader(header)
+			needsHeader = false
+		}
+
+		// send the table to the cube plane
+		cp.UpdateChan <- table
+		time.Sleep(5 * time.Second)
+	}
+}
+
+func PollFile(file string, cp *cubeplane.CubePlane) {
+
+	failed := func(err error) {
+		fmt.Fprintf(os.Stderr, "Failed to load data form file %s: %s\n", file, err)
+		time.Sleep(5 * time.Second)
+	}
+
+	needsHeader := true
+	for {
+		var input io.Reader
+		var fd *os.File
+		if file == "-" {
+			input = bufio.NewReader(os.Stdin)
+		} else {
+			fd, err := os.Open(file)
+			if err != nil {
+				failed(err)
+				fd.Close()
+				continue
+			}
+			input = bufio.NewReader(fd)
+		}
+
+		header, table, _ := text2table.NewTable(input)
+		if needsHeader {
+			cp.SetHeader(header)
+			needsHeader = false
+		}
+		cp.UpdateChan <- table
+		time.Sleep(5 * time.Second)
+		fd.Close()
 	}
 }

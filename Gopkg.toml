@@ -1,6 +1,7 @@
 [[constraint]]
-  branch = "master"
   name = "github.com/g3n/engine"
+  source = "https://github.com/cove/engine.git"
+  branch = "oq-fixes"
 
 [[override]]
   branch = "master"
