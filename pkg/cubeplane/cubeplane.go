@@ -323,9 +323,9 @@ func (cp *CubePlane) updateCubeStatus(node *core.Node) {
 		}
 
 		// scale to log if the value is too much larger than our cube
-		if value > 2*float64(cp.size) {
-			value = math.Log10(value)
-		}
+		//if value > 1000*float64(cp.size) {
+		value = math.Log2(value)
+		//}
 
 		imesh.SetWireframe(cp.cubeWireframe)
 

@@ -151,7 +151,7 @@ func PollCmd(command string, cp *cubeplane.CubePlane) {
 
 	failed := func(err error) {
 		fmt.Fprintf(os.Stderr, "Command failed to run command %s %s: %s\n", cmd, args, err)
-		time.Sleep(5 * time.Second)
+		time.Sleep(3 * time.Second)
 	}
 
 	// main loop that polls the command
@@ -182,7 +182,7 @@ func PollCmd(command string, cp *cubeplane.CubePlane) {
 
 		// send the table to the cube plane
 		cp.UpdateChan <- table
-		time.Sleep(5 * time.Second)
+		time.Sleep(3 * time.Second)
 	}
 }
 
@@ -190,7 +190,7 @@ func PollFile(file string, cp *cubeplane.CubePlane) {
 
 	failed := func(err error) {
 		fmt.Fprintf(os.Stderr, "Failed to load data form file %s: %s\n", file, err)
-		time.Sleep(5 * time.Second)
+		time.Sleep(3 * time.Second)
 	}
 
 	needsHeader := true
@@ -215,7 +215,7 @@ func PollFile(file string, cp *cubeplane.CubePlane) {
 			needsHeader = false
 		}
 		cp.UpdateChan <- table
-		time.Sleep(5 * time.Second)
+		time.Sleep(3 * time.Second)
 		fd.Close()
 	}
 }
