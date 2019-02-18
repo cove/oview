@@ -322,10 +322,8 @@ func (cp *CubePlane) updateCubeStatus(node *core.Node) {
 			return
 		}
 
-		// scale to log if the value is too much larger than our cube
-		//if value > 1000*float64(cp.size) {
+		// TODO: convert to percent, requires making a updateTable() call that can determine the max before rendering the cube
 		value = math.Log2(value)
-		//}
 
 		imesh.SetWireframe(cp.cubeWireframe)
 
