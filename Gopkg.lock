@@ -2,16 +2,13 @@
 
 
 [[projects]]
-  digest = "1:7fc160b460a6fc506b37fcca68332464c3f2cd57b6e3f111f26c5bbfd2d5518e"
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
-  pruneopts = "T"
   revision = "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9"
   version = "v1.4.7"
 
 [[projects]]
   branch = "oq-fixes"
-  digest = "1:f1651e2939d2e5fc97416dabac989b5b17faf52139c10628b843864cf2adb9ab"
   name = "github.com/g3n/engine"
   packages = [
     "audio/al",
@@ -34,33 +31,27 @@
     "texture",
     "util/application",
     "util/logger",
-    "window",
+    "window"
   ]
-  pruneopts = "T"
   revision = "0efeb4535ac68a852653cbb9ad865114a9e6b104"
   source = "https://github.com/cove/engine.git"
 
 [[projects]]
   branch = "master"
-  digest = "1:e8d292253ac63a2c277fd16423943006a72a2ef335b402ac8618a41ad360bd52"
   name = "github.com/go-gl/glfw"
   packages = ["v3.2/glfw"]
-  pruneopts = "T"
   revision = "691ee1b84c51ae625ed1aafebc915d3db3d63d66"
 
 [[projects]]
   branch = "master"
-  digest = "1:d2d5e9922ece6ae1d37016e7e149ea86ad3d3ec7505376fc6fdba3e2f8ff5e2e"
   name = "github.com/golang/freetype"
   packages = [
     "raster",
-    "truetype",
+    "truetype"
   ]
-  pruneopts = "T"
   revision = "e2365dfdc4a05e4b8299a783240d4a7d5a65d4e4"
 
 [[projects]]
-  digest = "1:071bcbf82c289fba4d3f63c876bf4f0ba7eda625cd60795e0a03ccbf949e517a"
   name = "github.com/hashicorp/hcl"
   packages = [
     ".",
@@ -72,132 +63,102 @@
     "hcl/token",
     "json/parser",
     "json/scanner",
-    "json/token",
+    "json/token"
   ]
-  pruneopts = "T"
   revision = "8cb6e5b959231cc1119e43259c4a608f9c51a241"
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:870d441fe217b8e689d7949fef6e43efbc787e50f200cb1e70dbca9204a1d6be"
   name = "github.com/inconshreveable/mousetrap"
   packages = ["."]
-  pruneopts = "T"
   revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
   version = "v1.0"
 
 [[projects]]
-  digest = "1:53e8c5c79716437e601696140e8b1801aae4204f4ec54a504333702a49572c4f"
   name = "github.com/magiconair/properties"
   packages = ["."]
-  pruneopts = "T"
   revision = "c2353362d570a7bfa228149c62842019201cfb71"
   version = "v1.8.0"
 
 [[projects]]
-  digest = "1:78bbb1ba5b7c3f2ed0ea1eab57bdd3859aec7e177811563edc41198a760b06af"
   name = "github.com/mitchellh/go-homedir"
   packages = ["."]
-  pruneopts = "T"
   revision = "ae18d6b8b3205b561c79e8e5f69bff09736185f4"
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:53bc4cd4914cd7cd52139990d5170d6dc99067ae31c56530621b18b35fc30318"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
-  pruneopts = "T"
   revision = "3536a929edddb9a5b34bd6861dc4a9647cb459fe"
   version = "v1.1.2"
 
 [[projects]]
-  digest = "1:ccf9949c9c53e85dcb7e2905fc620571422567040925381e6baa62f0b7b850fe"
   name = "github.com/pelletier/go-toml"
   packages = ["."]
-  pruneopts = "T"
   revision = "c01d1270ff3e442a8a57cddc1c92dc1138598194"
   version = "v1.2.0"
 
 [[projects]]
-  digest = "1:b7bf9fd95d38ebe6726a63b7d0320611f7c920c64e2c8313eba0cec51926bf55"
   name = "github.com/spf13/afero"
   packages = [
     ".",
-    "mem",
+    "mem"
   ]
-  pruneopts = "T"
   revision = "d40851caa0d747393da1ffb28f7f9d8b4eeffebd"
   version = "v1.1.2"
 
 [[projects]]
-  digest = "1:08d65904057412fc0270fc4812a1c90c594186819243160dc779a402d4b6d0bc"
   name = "github.com/spf13/cast"
   packages = ["."]
-  pruneopts = "T"
   revision = "8c9545af88b134710ab1cd196795e7f2388358d7"
   version = "v1.3.0"
 
 [[projects]]
-  digest = "1:8be8b3743fc9795ec21bbd3e0fc28ff6234018e1a269b0a7064184be95ac13e0"
   name = "github.com/spf13/cobra"
   packages = ["."]
-  pruneopts = "T"
   revision = "ef82de70bb3f60c65fb8eebacbb2d122ef517385"
   version = "v0.0.3"
 
 [[projects]]
-  digest = "1:68ea4e23713989dc20b1bded5d9da2c5f9be14ff9885beef481848edd18c26cb"
   name = "github.com/spf13/jwalterweatherman"
   packages = ["."]
-  pruneopts = "T"
   revision = "4a4406e478ca629068e7768fc33f3f044173c0a6"
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:0f775ea7a72e30d5574267692aaa9ff265aafd15214a7ae7db26bc77f2ca04dc"
   name = "github.com/spf13/pflag"
   packages = ["."]
-  pruneopts = "T"
   revision = "298182f68c66c05229eb03ac171abe6e309ee79a"
   version = "v1.0.3"
 
 [[projects]]
-  digest = "1:e51827672e3fb26dfd07e1ca96bdece5b1c0ecebacdaf0235d7593314d2a17ac"
   name = "github.com/spf13/viper"
   packages = ["."]
-  pruneopts = "T"
   revision = "2c12c60302a5a0e62ee102ca9bc996277c2f64f5"
   version = "v1.2.1"
 
 [[projects]]
   branch = "master"
-  digest = "1:34aa8d327ff3059c771b721563412a61e8a37af03846a31c56d5dd9985ca32f9"
   name = "golang.org/x/image"
   packages = [
     "font",
-    "math/fixed",
+    "math/fixed"
   ]
-  pruneopts = "T"
   revision = "cd38e8056d9b27bb2f265effa37fb0ea6b8a7f0f"
 
 [[projects]]
   branch = "master"
-  digest = "1:c20b4d66e71aae7504855ab3cf6ad99b68134712dd0ed4786144136fb14c66e9"
   name = "golang.org/x/sync"
   packages = ["semaphore"]
-  pruneopts = "T"
   revision = "42b317875d0fa942474b76e1b46a6060d720ae6e"
 
 [[projects]]
   branch = "master"
-  digest = "1:a41815681b9cb9d91eb5bd22009d99af713567bb20f14b2ff13765d8fd8de808"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  pruneopts = "T"
   revision = "4ed8d59d0b35e1e29334a206d1b3f38b1e5dfb31"
 
 [[projects]]
-  digest = "1:6164911cb5e94e8d8d5131d646613ff82c14f5a8ce869de2f6d80d9889df8c5a"
   name = "golang.org/x/text"
   packages = [
     "internal/gen",
@@ -205,40 +166,20 @@
     "internal/ucd",
     "transform",
     "unicode/cldr",
-    "unicode/norm",
+    "unicode/norm"
   ]
-  pruneopts = "T"
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
 
 [[projects]]
-  digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  pruneopts = "T"
   revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
   version = "v2.2.2"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  input-imports = [
-    "github.com/g3n/engine/camera/control",
-    "github.com/g3n/engine/core",
-    "github.com/g3n/engine/geometry",
-    "github.com/g3n/engine/gls",
-    "github.com/g3n/engine/graphic",
-    "github.com/g3n/engine/gui",
-    "github.com/g3n/engine/light",
-    "github.com/g3n/engine/material",
-    "github.com/g3n/engine/math32",
-    "github.com/g3n/engine/renderer",
-    "github.com/g3n/engine/util/application",
-    "github.com/g3n/engine/window",
-    "github.com/mitchellh/go-homedir",
-    "github.com/spf13/cobra",
-    "github.com/spf13/viper",
-    "golang.org/x/sync/semaphore",
-  ]
+  inputs-digest = "f52ebea496695dc97ed182f2c350b5be1be5d3b089396e697633229f9e3f0601"
   solver-name = "gps-cdcl"
   solver-version = 1
