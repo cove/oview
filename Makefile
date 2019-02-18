@@ -14,10 +14,11 @@
 
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
+VERSION = $(shell git rev-parse HEAD | cut -c 1-8)
 
 .PHONY: build
 build:
-	go build -o oview
+	go build  -ldflags "-X main.Version=$(VERSION)-snapshot" -o oview
 
 .PHONY: clean
 clean:
@@ -30,13 +31,12 @@ deps:
 
 .PHONY: release-unix
 release-unix:
-	go build -o oview
-	tar -cvf oview-${GOOS}-${GOARCH}.tar oview
-	gzip -9 oview-${GOOS}-${GOARCH}.tar
+	go build -ldflags "-X main.Version=$(VERSION)-release" -o oview
+	tar -cvf oview-${GOOS}-${GOARCH}-$(VERSION)-release.tar oview
+	gzip -9 oview-${GOOS}-${GOARCH}-$(VERSION)-release.tar
 
 .PHONY: release-windows
 release-windows:
-	go build -o oview
+	go build -ldflags "-X main.Version=$(VERSION})-release" -o oview
 	copy vendor/github.com/g3n/engine/audio/windows/bin/*.dll .
-	zip -9 oview-${GOOS}-${GOARCH}.tar oview *.dll
-
+	zip -9 oview-${GOOS}-${GOARCH}-$(VERSION)-release.tar oview *.dll

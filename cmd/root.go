@@ -48,8 +48,9 @@ var (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "oview",
-	Short: "Displays a text table as a 3D rotating plane of cubes",
+	Use:     "oview",
+	Version: "unknown",
+	Short:   "Displays a text table as a 3D rotating plane of cubes",
 	Long: `Takes a text table and displays it as a 3D rotating plane of cubes,
 where the size of the cube grows and shrinks based on the values
 associated with the cube. This allows one to see a large table that may 

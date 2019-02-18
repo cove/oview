@@ -14,8 +14,15 @@
 
 package main
 
-import "github.com/cove/oview/cmd"
+import (
+	"fmt"
+
+	"github.com/cove/oview/cmd"
+)
+
+var Version string
 
 func main() {
+	fmt.Printf("Version: %v\n", Version)
 	cmd.Execute()
 }
